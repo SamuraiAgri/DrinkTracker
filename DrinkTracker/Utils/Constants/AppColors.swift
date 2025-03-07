@@ -2,36 +2,36 @@ import SwiftUI
 
 struct AppColors {
     // メインカラー
-    static let primary = Color("PrimaryColor") // テーマカラー（深い青緑色）
-    static let secondary = Color("SecondaryColor") // アクセントカラー（ライトブルー）
-    static let accent = Color("AccentColor") // アクセントカラー（鮮やかな青）
+    static let primary = Color.blue // テーマカラー
+    static let secondary = Color.teal // アクセントカラー
+    static let accent = Color.cyan // アクセントカラー
     
     // 背景色
-    static let background = Color("BackgroundColor") // 背景色（オフホワイト）
-    static let secondaryBackground = Color("SecondaryBackgroundColor") // セカンダリ背景（薄いグレー）
-    static let cardBackground = Color("CardBackgroundColor") // カード背景（白）
+    static let background = Color.white // 背景色
+    static let secondaryBackground = Color(UIColor.systemGray6) // セカンダリ背景
+    static let cardBackground = Color.white // カード背景
     
     // テキストカラー
-    static let textPrimary = Color("TextPrimaryColor") // 主要テキスト（濃いグレー）
-    static let textSecondary = Color("TextSecondaryColor") // 二次テキスト（中間グレー）
-    static let textTertiary = Color("TextTertiaryColor") // 三次テキスト（薄いグレー）
+    static let textPrimary = Color.black // 主要テキスト
+    static let textSecondary = Color.gray // 二次テキスト
+    static let textTertiary = Color(UIColor.systemGray4) // 三次テキスト
     
     // 機能的なカラー
-    static let success = Color("SuccessColor") // 成功（緑）
-    static let warning = Color("WarningColor") // 警告（オレンジ）
-    static let error = Color("ErrorColor") // エラー（赤）
-    static let info = Color("InfoColor") // 情報（青）
+    static let success = Color.green // 成功
+    static let warning = Color.orange // 警告
+    static let error = Color.red // エラー
+    static let info = Color.blue // 情報
     
     // 飲酒レベル表示用カラー
-    static let drinkLevelSafe = Color("DrinkLevelSafeColor") // 安全レベル（緑）
-    static let drinkLevelModerate = Color("DrinkLevelModerateColor") // 中程度（黄色）
-    static let drinkLevelRisky = Color("DrinkLevelRiskyColor") // 危険レベル（オレンジ）
-    static let drinkLevelHigh = Color("DrinkLevelHighColor") // 高リスク（赤）
+    static let drinkLevelSafe = Color.green // 安全レベル
+    static let drinkLevelModerate = Color.yellow // 中程度
+    static let drinkLevelRisky = Color.orange // 危険レベル
+    static let drinkLevelHigh = Color.red // 高リスク
     
     // アルコール種類別カラー
-    static let beerColor = Color("BeerColor") // ビール（黄金色）
-    static let wineColor = Color("WineColor") // ワイン（赤紫色）
-    static let spiritsColor = Color("SpiritsColor") // 蒸留酒（琥珀色）
-    static let cocktailColor = Color("CocktailColor") // カクテル（水色）
-    static let sakeColor = Color("SakeColor") // 日本酒（淡い黄色）
+    static let beerColor = Color.yellow // ビール（黄金色）
+    static let wineColor = Color.purple // ワイン（赤紫色）
+    static let spiritsColor = Color.brown // 蒸留酒（琥珀色）
+    static let cocktailColor = Color.blue // カクテル（水色）
+    static let sakeColor = Color(UIColor.systemYellow).opacity(0.7) // 日本酒（淡い黄色）
 }
