@@ -27,7 +27,7 @@ struct HomeView: View {
                 WeeklySummaryView(viewModel: viewModel)
                 
                 // 最近の飲み物リスト
-                RecentDrinksView(drinks: viewModel.recentDrinks)
+                RecentDrinksView(drinks: viewModel.recentDrinks, viewModel: viewModel)
                 
                 // 健康アドバイス
                 HealthAdviceView(advice: viewModel.healthAdvice)
@@ -234,9 +234,11 @@ struct WeeklySummaryView: View {
     }
 }
 
-// 最近の飲み物リスト
 struct RecentDrinksView: View {
     let drinks: [DrinkRecord]
+    @ObservedObject var viewModel: HomeViewModel
+    @State private var showingEditSheet = false
+    @State private var drinkToEdit: DrinkRecord? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppConstants.UI.smallPadding) {
@@ -249,15 +251,45 @@ struct RecentDrinksView: View {
                     .foregroundColor(AppColors.textSecondary)
                     .padding()
             } else {
-                ForEach(drinks.prefix(5)) { drink in
-                    DrinkListItemView(drink: drink)
+                // List を使用してスワイプアクションを実装
+                List {
+                    ForEach(drinks.prefix(5)) { drink in
+                        DrinkListItemView(drink: drink)
+                            .listRowInsets(EdgeInsets()) // 余分な余白を削除
+                            .background(AppColors.cardBackground)
+                            .listRowBackground(Color.clear) // 背景を透明に
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    viewModel.deleteDrink(drink.id)
+                                } label: {
+                                    Label("削除", systemImage: "trash")
+                                }
+                                
+                                Button {
+                                    drinkToEdit = drink
+                                    showingEditSheet = true
+                                } label: {
+                                    Label("編集", systemImage: "pencil")
+                                }
+                                .tint(AppColors.primary)
+                            }
+                    }
                 }
+                .listStyle(PlainListStyle()) // リストスタイルをプレーンに
+                .frame(height: min(CGFloat(drinks.prefix(5).count) * 80, 400)) // 高さを調整
             }
         }
         .padding()
         .background(AppColors.cardBackground)
         .cornerRadius(AppConstants.UI.cornerRadius)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .sheet(isPresented: $showingEditSheet, onDismiss: {
+            drinkToEdit = nil
+        }) {
+            if let drink = drinkToEdit {
+                DrinkRecordView(drinkDataManager: viewModel.drinkDataManager, existingDrink: drink)
+            }
+        }
     }
 }
 

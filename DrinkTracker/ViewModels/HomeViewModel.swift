@@ -133,4 +133,9 @@ class HomeViewModel: ObservableObject {
             return "DrinkLevelHighColor"
         }
     }
+    
+    func deleteDrink(_ id: UUID) {
+        drinkDataManager.deleteDrinkRecord(id)
+        updateDisplayData()
+    }
 }

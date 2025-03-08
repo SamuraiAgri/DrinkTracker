@@ -73,15 +73,20 @@ class DrinkRecordViewModel: ObservableObject {
         favoritePresets = drinkDataManager.drinkRecords.filter { $0.isFavorite }
     }
     
-    // 次のステップに進む
+    // 次のステップに進む - 修正箇所
     func nextStep() {
+        print("Current step: \(currentStep)")  // デバッグ出力
+        
         switch currentStep {
         case .drinkType:
             currentStep = .amount
+            print("Moving to amount step")  // デバッグ出力
         case .amount:
             currentStep = .details
+            print("Moving to details step")  // デバッグ出力
         case .details:
             saveRecord()
+            print("Saving record")  // デバッグ出力
         }
     }
     
@@ -156,7 +161,7 @@ class DrinkRecordViewModel: ObservableObject {
     }
     
     // 記録フォームのステップ
-    enum RecordStep {
+    enum RecordStep: String {
         case drinkType
         case amount
         case details

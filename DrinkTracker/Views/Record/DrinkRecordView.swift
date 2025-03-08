@@ -1,4 +1,4 @@
-// DrinkTracker/Views/Record/DrinkRecordView.swift
+
 import SwiftUI
 
 struct DrinkRecordView: View {

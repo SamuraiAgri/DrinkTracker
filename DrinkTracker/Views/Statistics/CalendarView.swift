@@ -183,18 +183,40 @@ struct CalendarDayView: View {
                             isCurrentMonth ? AppColors.textPrimary : AppColors.textTertiary
                     )
                 
-                // Indicator for days with records
-                if hasDrinkRecord() {
-                    Circle()
-                        .fill(AppColors.primary)
-                        .frame(width: 6, height: 6)
+                // アルコール量と健康リスク表示
+                if isCurrentMonth {
+                    let dayRecords = viewModel.drinkDataManager.getDrinkRecords(for: day)
+                    if !dayRecords.isEmpty {
+                        let totalAlcohol = dayRecords.reduce(0) { $0 + $1.pureAlcoholGrams }
+                        
+                        VStack(spacing: 1) {
+                            // アルコール量
+                            Text("\(Int(totalAlcohol))g")
+                                .font(.system(size: 9))
+                                .foregroundColor(isSelectedDay ? .white : AppColors.textSecondary)
+                            
+                            // 健康リスク絵文字
+                            Text(getRiskEmoji(totalAlcohol: totalAlcohol))
+                                .font(.system(size: 10))
+                        }
+                    } else {
+                        if hasDrinkRecord() {
+                            Circle()
+                                .fill(AppColors.primary)
+                                .frame(width: 6, height: 6)
+                        } else {
+                            Circle()
+                                .fill(Color.clear)
+                                .frame(width: 6, height: 6)
+                        }
+                    }
                 } else {
                     Circle()
                         .fill(Color.clear)
                         .frame(width: 6, height: 6)
                 }
             }
-            .frame(height: 36)
+            .frame(height: 46) // 高さを調整
             .frame(maxWidth: .infinity)
             .background(
                 Circle()
@@ -213,5 +235,24 @@ struct CalendarDayView: View {
         // Check if there's a drink record for this day
         let records = viewModel.drinkDataManager.getDrinkRecords(for: day)
         return !records.isEmpty
+    }
+    
+    // アルコール量に基づく絵文字を返す
+    private func getRiskEmoji(totalAlcohol: Double) -> String {
+        let limit = viewModel.dailyLimit
+        
+        if totalAlcohol <= limit * 0.25 {
+            return "😊" // 安全
+        } else if totalAlcohol <= limit * 0.5 {
+            return "🙂" // やや安全
+        } else if totalAlcohol <= limit * 0.75 {
+            return "😐" // 中程度
+        } else if totalAlcohol <= limit {
+            return "😕" // 警戒
+        } else if totalAlcohol <= limit * 1.5 {
+            return "😨" // 危険
+        } else {
+            return "🤢" // 非常に危険
+        }
     }
 }
