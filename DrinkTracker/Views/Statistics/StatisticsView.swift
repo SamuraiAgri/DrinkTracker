@@ -31,8 +31,10 @@ struct StatisticsView: View {
                 StatisticsSummaryView(viewModel: viewModel)
                 
                 // 飲酒タイプ内訳
-                if let stats = viewModel.getStatistics(), !stats.drinkTypeBreakdown.isEmpty {
-                    DrinkTypeBreakdownView(breakdown: stats.drinkTypeBreakdown)
+                Group {
+                    if let stats = viewModel.getStatistics(), !stats.drinkTypeBreakdown.isEmpty {
+                        DrinkTypeBreakdownView(breakdown: stats.drinkTypeBreakdown)
+                    }
                 }
                 
                 // 詳細データテーブル

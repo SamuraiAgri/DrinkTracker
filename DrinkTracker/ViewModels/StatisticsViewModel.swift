@@ -242,7 +242,7 @@ class StatisticsViewModel: ObservableObject {
     }
     
     // 統計データ取得
-    func getStatistics() -> Statistics {
+    func getStatistics() -> Statistics? {
         // 現在選択されている期間の記録を取得
         let records: [DrinkRecord]
         
@@ -259,8 +259,7 @@ class StatisticsViewModel: ObservableObject {
             guard let startOfYear = calendar.date(
                 from: calendar.dateComponents([.year], from: selectedDate)
             ) else {
-                records = []
-                break
+                return nil  // nil を返す
             }
             
             guard let endOfYear = calendar.date(
@@ -268,13 +267,16 @@ class StatisticsViewModel: ObservableObject {
                 value: 1,
                 to: startOfYear
             ) else {
-                records = []
-                break
+                return nil  // nil を返す
             }
             
             records = drinkDataManager.drinkRecords.filter { record in
                 record.date >= startOfYear && record.date < endOfYear
             }
+        }
+        
+        if records.isEmpty {
+            return nil
         }
         
         // 統計データの計算

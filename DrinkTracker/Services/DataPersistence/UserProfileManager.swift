@@ -8,6 +8,7 @@ class UserProfileManager: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init() {
+        self.userProfile = UserProfile()
         // 保存されているプロファイルを読み込むか、デフォルトを作成
         if let savedProfile = loadProfile() {
             self.userProfile = savedProfile
