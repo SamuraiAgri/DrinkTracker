@@ -1,3 +1,4 @@
+// DrinkTracker/ViewModels/HomeViewModel.swift
 import Foundation
 import Combine
 
@@ -12,7 +13,7 @@ class HomeViewModel: ObservableObject {
     @Published var currentDate: Date = Date()
     
     // サービス
-    private let drinkDataManager: DrinkDataManager
+    public let drinkDataManager: DrinkDataManager
     private let userProfileManager: UserProfileManager
     
     // 推奨摂取限度量
@@ -25,9 +26,6 @@ class HomeViewModel: ObservableObject {
         // すべてのプロパティを初期化してから監視を設定
         self.drinkDataManager = drinkDataManager
         self.userProfileManager = userProfileManager
-        
-        // ここで初期データを読み込む
-        updateDisplayData()
         
         // ユーザープロファイルの変更を監視
         userProfileManager.$userProfile
@@ -43,6 +41,9 @@ class HomeViewModel: ObservableObject {
                 self?.updateDisplayData()
             }
             .store(in: &cancellables)
+            
+        // 初期データを読み込む
+        updateDisplayData()
     }
     
     // 表示データを更新

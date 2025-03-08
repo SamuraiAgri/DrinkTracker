@@ -14,7 +14,7 @@ class StatisticsViewModel: ObservableObject {
     @Published var selectedDate: Date = Date()
     
     // サービス
-    private let drinkDataManager: DrinkDataManager
+    public let drinkDataManager: DrinkDataManager
     private let userProfileManager: UserProfileManager
     
     // ユーザープロファイル情報

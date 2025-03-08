@@ -1,3 +1,4 @@
+// DrinkTracker/Utils/Constants/AppIcons.swift
 import SwiftUI
 
 struct AppIcons {
@@ -24,8 +25,8 @@ struct AppIcons {
         static let notification = Image(systemName: "bell")
     }
     
-    // Drink type icons
-    struct DrinkType {
+    // Drink type icons - DrinkIconNames に名前変更
+    struct DrinkIconNames {
         static let beer = "beer"
         static let wine = "wine"
         static let spirits = "spirits"

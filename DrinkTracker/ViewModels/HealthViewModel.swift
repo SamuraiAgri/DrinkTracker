@@ -17,7 +17,7 @@ class HealthViewModel: ObservableObject {
     @Published var drinkingGoal: UserProfile.DrinkingGoal = .moderate
     
     // Services
-    private let drinkDataManager: DrinkDataManager
+    public let drinkDataManager: DrinkDataManager
     private let userProfileManager: UserProfileManager
     
     private var cancellables = Set<AnyCancellable>()

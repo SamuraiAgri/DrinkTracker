@@ -17,7 +17,7 @@ class DrinkRecordViewModel: ObservableObject {
     private var existingDrinkId: UUID?
     
     // サービス
-    private let drinkDataManager: DrinkDataManager
+    public let drinkDataManager: DrinkDataManager
     
     // フォームの進行状態
     @Published var currentStep: RecordStep = .drinkType
