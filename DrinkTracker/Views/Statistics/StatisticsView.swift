@@ -395,7 +395,7 @@ struct DailyDataTable: View {
             // データ行
             ScrollView {
                 VStack(spacing: 0) {
-                    ForEach(data) { item in
+                    ForEach(data.sorted(by: { $0.hour < $1.hour })) { item in
                         HStack {
                             // 時間
                             Text("\(item.hour):00")
@@ -408,22 +408,23 @@ struct DailyDataTable: View {
                             // アルコール量
                             Text("\(String(format: "%.1f", item.alcoholGrams))g")
                                 .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
+                                .foregroundColor(item.alcoholGrams > 0 ? AppColors.textPrimary : AppColors.textTertiary)
                                 .frame(width: 80, alignment: .trailing)
                             
                             // 支出
                             Text("¥\(Int(item.spending))")
                                 .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
+                                .foregroundColor(item.spending > 0 ? AppColors.textPrimary : AppColors.textTertiary)
                                 .frame(width: 80, alignment: .trailing)
                             
                             // 回数
                             Text("\(item.count)")
                                 .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
+                                .foregroundColor(item.count > 0 ? AppColors.textPrimary : AppColors.textTertiary)
                                 .frame(width: 50, alignment: .trailing)
                         }
                         .padding(.vertical, 8)
+                        .background(item.hour % 2 == 0 ? Color.gray.opacity(0.05) : Color.clear)
                         
                         Divider()
                     }
@@ -614,16 +615,121 @@ struct MonthlyDataTable: View {
     }
 }
 
-struct StatisticsView_Previews: PreviewProvider {
-    static var previews: some View {
-        let drinkDataManager = DrinkDataManager()
-        let userProfileManager = UserProfileManager()
-        
-        return NavigationView {
-            StatisticsView(
-                drinkDataManager: drinkDataManager,
-                userProfileManager: userProfileManager
-            )
+// RecordsListView - 既存のファイルに追加
+struct RecordsListView: View {
+    let drinkDataManager: DrinkDataManager
+    let selectedTimeFrame: StatisticsViewModel.TimeFrame
+    let selectedDate: Date
+    @State private var drinkToEdit: DrinkRecord? = nil
+    @Environment(\.presentationMode) var presentationMode
+    @State private var recordsByDate: [Date: [DrinkRecord]] = [:]
+    
+    private var records: [DrinkRecord] {
+        switch selectedTimeFrame {
+        case .day:
+            return drinkDataManager.getDrinkRecords(for: selectedDate)
+        case .week:
+            return drinkDataManager.getWeeklyRecords(endingAt: selectedDate)
+        case .month:
+            return drinkDataManager.getMonthlyRecords(containing: selectedDate)
         }
+    }
+    
+    private var timeFrameText: String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy年M月d日"
+        
+        switch selectedTimeFrame {
+        case .day:
+            return dateFormatter.string(from: selectedDate)
+        case .week:
+            let calendar = Calendar.current
+            guard let startDate = calendar.date(byAdding: .day, value: -6, to: selectedDate) else {
+                return "週間データ"
+            }
+            dateFormatter.dateFormat = "M月d日"
+            return "\(dateFormatter.string(from: startDate))〜\(dateFormatter.string(from: selectedDate))"
+        case .month:
+            dateFormatter.dateFormat = "yyyy年M月"
+            return dateFormatter.string(from: selectedDate)
+        }
+    }
+    
+    var body: some View {
+        NavigationView {
+            List {
+                if records.isEmpty {
+                    Text("この期間の記録はありません")
+                        .foregroundColor(AppColors.textSecondary)
+                        .padding()
+                } else {
+                    // 期間表示セクション
+                    Section(header: Text("表示期間: \(timeFrameText)")) {
+                        // 日付でグループ化
+                        ForEach(recordsByDate.keys.sorted(by: >), id: \.self) { date in
+                            if let dateRecords = recordsByDate[date] {
+                                Section(header: Text(formatDateHeader(date))) {
+                                    ForEach(dateRecords) { drink in
+                                        DrinkListItemView(drink: drink)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                drinkToEdit = drink
+                                            }
+                                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                                Button(role: .destructive) {
+                                                    drinkDataManager.deleteDrinkRecord(drink.id)
+                                                    // 削除後にデータを再グループ化
+                                                    groupRecordsByDate()
+                                                } label: {
+                                                    Label("削除", systemImage: "trash")
+                                                }
+                                            }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .listStyle(InsetGroupedListStyle())
+            .navigationTitle("記録の管理")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("閉じる") {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
+            }
+        }
+        .sheet(item: $drinkToEdit) { drink in
+            DrinkRecordView(drinkDataManager: drinkDataManager, existingDrink: drink)
+        }
+        .onAppear {
+            groupRecordsByDate()
+        }
+    }
+    
+    private func groupRecordsByDate() {
+        // レコードを日付でグループ化
+        let calendar = Calendar.current
+        recordsByDate = Dictionary(grouping: records) { record in
+            calendar.startOfDay(for: record.date)
+        }
+    }
+    
+    private func formatDateHeader(_ date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy年M月d日 (E)"
+        return dateFormatter.string(from: date)
+    }
+    
+    private func deleteDrink(at offsets: IndexSet) {
+        offsets.forEach { index in
+            let drink = records[index]
+            drinkDataManager.deleteDrinkRecord(drink.id)
+        }
+        // 削除後にデータを再グループ化
+        groupRecordsByDate()
     }
 }

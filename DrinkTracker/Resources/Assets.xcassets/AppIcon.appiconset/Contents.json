@@ -1,6 +1,7 @@
 {
   "images" : [
     {
+      "filename" : "飲酒管理.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -23,6 +24,7 @@
           "value" : "tinted"
         }
       ],
+      "filename" : "飲酒管理 1.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

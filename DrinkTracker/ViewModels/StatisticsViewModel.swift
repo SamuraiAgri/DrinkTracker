@@ -57,7 +57,6 @@ class StatisticsViewModel: ObservableObject {
             updateWeeklyData()
         case .month:
             updateMonthlyData()
-        // year ケースを削除
         }
     }
     
@@ -350,7 +349,6 @@ class StatisticsViewModel: ObservableObject {
         case day = "日"
         case week = "週"
         case month = "月"
-    }
     }
     
     // データ種類の列挙型
