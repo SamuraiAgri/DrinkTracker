@@ -275,3 +275,13 @@ struct AboutAppView: View {
     private func bulletPoint(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Text("•")
+                .font(AppFonts.body)
+                .foregroundColor(AppColors.primary)
+            
+            Text(text)
+                .font(AppFonts.body)
+                .foregroundColor(AppColors.textPrimary)
+                .multilineTextAlignment(.leading)
+        }
+    }
+}

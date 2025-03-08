@@ -58,8 +58,10 @@ struct ContentView: View {
                 
                 // 健康画面
                 NavigationView {
-                    Text("健康画面はこちらに実装予定")
-                        .navigationTitle("健康")
+                    HealthView(
+                        drinkDataManager: drinkDataManager,
+                        userProfileManager: userProfileManager
+                    )
                 }
                 .tag(Tab.health)
                 .tabItem {
@@ -69,8 +71,7 @@ struct ContentView: View {
                 
                 // 設定画面
                 NavigationView {
-                    Text("設定画面はこちらに実装予定")
-                        .navigationTitle("設定")
+                    SettingsView(userProfileManager: userProfileManager)
                 }
                 .tag(Tab.settings)
                 .tabItem {
