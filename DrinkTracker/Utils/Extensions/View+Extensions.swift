@@ -1,3 +1,4 @@
+// DrinkTracker/Utils/Extensions/View+Extensions.swift
 import SwiftUI
 
 extension View {
@@ -11,7 +12,7 @@ extension View {
         self.shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
     }
     
-    // Hide keyboard when tapping outside
+    // Hide keyboard when tapping around
     func hideKeyboardWhenTappedAround() -> some View {
         return self.onTapGesture {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -29,11 +30,13 @@ extension View {
     
     // Add padding for safe area (especially for bottom tab bar)
     func safeAreaPadding() -> some View {
-        self.padding(.bottom, UIApplication.shared.connectedScenes
-                    .filter { $0.activationState == .foregroundActive }
-                    .first(where: { $0 is UIWindowScene })
-                    .flatMap({ $0 as? UIWindowScene })?.windows
-                    .first(where: \.isKeyWindow)?.safeAreaInsets.bottom ?? 0)
+        let keyWindow = UIApplication.shared.connectedScenes
+            .filter { $0.activationState == .foregroundActive }
+            .first(where: { $0 is UIWindowScene })
+            .flatMap({ $0 as? UIWindowScene })?.windows
+            .first(where: \.isKeyWindow)
+        
+        return self.padding(.bottom, keyWindow?.safeAreaInsets.bottom ?? 0)
     }
 }
 

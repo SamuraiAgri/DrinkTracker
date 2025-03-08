@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import SwiftUI
 
 class ReminderManager {
     static let shared = ReminderManager()

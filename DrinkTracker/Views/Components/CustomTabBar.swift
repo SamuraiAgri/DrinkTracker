@@ -1,3 +1,4 @@
+// DrinkTracker/Views/Components/CustomTabBar.swift
 import SwiftUI
 
 struct CustomTabBar: View {
@@ -13,7 +14,11 @@ struct CustomTabBar: View {
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.white)
                 .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: -2)
-                .frame(height: 60 + (UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0))
+                .frame(height: 60 + (UIApplication.shared.connectedScenes
+                    .filter { $0.activationState == .foregroundActive }
+                    .first(where: { $0 is UIWindowScene })
+                    .flatMap({ $0 as? UIWindowScene })?.windows
+                    .first(where: \.isKeyWindow)?.safeAreaInsets.bottom ?? 0))
                 .padding(.horizontal)
             
             // Tab items
@@ -34,7 +39,11 @@ struct CustomTabBar: View {
                     Spacer()
                 }
             }
-            .padding(.bottom, UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0)
+            .padding(.bottom, UIApplication.shared.connectedScenes
+                .filter { $0.activationState == .foregroundActive }
+                .first(where: { $0 is UIWindowScene })
+                .flatMap({ $0 as? UIWindowScene })?.windows
+                .first(where: \.isKeyWindow)?.safeAreaInsets.bottom ?? 0)
         }
     }
     
