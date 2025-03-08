@@ -1,4 +1,4 @@
-// DrinkTracker/Views/ContentView.swift
+// Views/ContentView.swift
 import SwiftUI
 
 struct ContentView: View {

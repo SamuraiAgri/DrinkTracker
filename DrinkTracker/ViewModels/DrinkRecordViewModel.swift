@@ -31,6 +31,7 @@ class DrinkRecordViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init(drinkDataManager: DrinkDataManager, existingDrink: DrinkRecord? = nil) {
+        // 最初にプロパティを初期化
         self.drinkDataManager = drinkDataManager
         
         // 既存の記録を編集する場合

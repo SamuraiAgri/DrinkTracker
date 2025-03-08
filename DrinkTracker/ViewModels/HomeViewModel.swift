@@ -22,8 +22,12 @@ class HomeViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init(drinkDataManager: DrinkDataManager, userProfileManager: UserProfileManager) {
+        // すべてのプロパティを初期化してから監視を設定
         self.drinkDataManager = drinkDataManager
         self.userProfileManager = userProfileManager
+        
+        // ここで初期データを読み込む
+        updateDisplayData()
         
         // ユーザープロファイルの変更を監視
         userProfileManager.$userProfile
@@ -39,9 +43,6 @@ class HomeViewModel: ObservableObject {
                 self?.updateDisplayData()
             }
             .store(in: &cancellables)
-        
-        // 初期データを読み込む
-        updateDisplayData()
     }
     
     // 表示データを更新

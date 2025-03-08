@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 class DrinkDataManager: ObservableObject {
-    @Published var drinkRecords: [DrinkRecord] = []
+    @Published public var drinkRecords: [DrinkRecord] = []
     
     private let storageKey = AppConstants.StorageKeys.drinkRecords
     private var cancellables = Set<AnyCancellable>()

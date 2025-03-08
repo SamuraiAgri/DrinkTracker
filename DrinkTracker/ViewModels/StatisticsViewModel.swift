@@ -24,8 +24,12 @@ class StatisticsViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init(drinkDataManager: DrinkDataManager, userProfileManager: UserProfileManager) {
+        // プロパティの初期化
         self.drinkDataManager = drinkDataManager
         self.userProfileManager = userProfileManager
+        
+        // 初期データを読み込む
+        updateData()
         
         // ユーザープロファイルの変更を監視
         userProfileManager.$userProfile
@@ -42,9 +46,6 @@ class StatisticsViewModel: ObservableObject {
                 self?.updateData()
             }
             .store(in: &cancellables)
-        
-        // 初期データを読み込む
-        updateData()
     }
     
     // データの更新
