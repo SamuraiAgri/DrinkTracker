@@ -29,7 +29,11 @@ extension View {
     
     // Add padding for safe area (especially for bottom tab bar)
     func safeAreaPadding() -> some View {
-        self.padding(.bottom, UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0)
+        self.padding(.bottom, UIApplication.shared.connectedScenes
+                    .filter { $0.activationState == .foregroundActive }
+                    .first(where: { $0 is UIWindowScene })
+                    .flatMap({ $0 as? UIWindowScene })?.windows
+                    .first(where: \.isKeyWindow)?.safeAreaInsets.bottom ?? 0)
     }
 }
 
