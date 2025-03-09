@@ -95,56 +95,120 @@ struct DailyGraphView: View {
                 .frame(maxWidth: .infinity)
         } else {
             VStack(spacing: 16) {
-                // 限度量ラインと共にグラフを表示
-                ZStack(alignment: .bottom) {
-                    // Bar chart
-                    HStack(alignment: .bottom, spacing: 6) {
-                        ForEach(viewModel.dailyData) { data in
-                            VStack(spacing: 4) {
-                                // Value label
-                                Text(getValueLabel(data))
-                                    .font(AppFonts.caption)
-                                    .foregroundColor(AppColors.textSecondary)
-                                    .opacity(getBarHeight(data) > 20 ? 1 : 0)
-                                
-                                // Bar
-                                Rectangle()
-                                    .fill(getBarColor(data))
-                                    .frame(width: 14, height: getBarHeight(data))
-                                    .cornerRadius(7)
-                                
-                                // Hour label
-                                Text("\(data.hour)")
-                                    .font(AppFonts.caption)
-                                    .foregroundColor(AppColors.textSecondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
+                // グラフエリア
+                VStack(alignment: .leading, spacing: 0) {
+                    // グラフタイトルと日付
+                    HStack {
+                        Text("時間帯別データ")
+                            .font(AppFonts.bodyBold)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Spacer()
+                        
+                        let formatter = DateFormatter()
+                        formatter.dateFormat = "yyyy年M月d日"
+                        Text(formatter.string(from: viewModel.selectedDate))
+                            .font(AppFonts.caption)
+                            .foregroundColor(AppColors.textSecondary)
                     }
-                    .frame(height: 200)
+                    .padding(.bottom, 8)
                     
-                    // 推奨限度量ライン（アルコール表示の場合のみ）
-                    if viewModel.selectedDataType == .alcohol {
-                        GeometryReader { geometry in
-                            let maxBarHeight: CGFloat = 150
-                            let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
-                            
-                            Rectangle()
-                                .fill(Color.red.opacity(0.5))
-                                .frame(height: 2)
-                                .offset(y: maxBarHeight - limitLineHeight)
-                                .overlay(
-                                    Text("\(Int(viewModel.dailyLimit))g")
-                                        .font(.system(size: 10))
-                                        .foregroundColor(.red)
-                                        .offset(x: -20, y: maxBarHeight - limitLineHeight - 12)
-                                )
+                    // グラフ本体
+                    ZStack(alignment: .bottom) {
+                        // グリッド線
+                        VStack(spacing: 0) {
+                            ForEach(0..<5) { i in
+                                Divider()
+                                    .background(Color.gray.opacity(0.2))
+                                    .padding(.bottom, 40)
+                            }
                         }
                         .frame(height: 200)
+                        .padding(.bottom, 20) // X軸ラベル用のスペース
+                        
+                        // 時間帯バー
+                        HStack(alignment: .bottom, spacing: 0) {
+                            // 固定幅のサイドスペース
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 20)
+                            
+                            // バーの表示
+                            HStack(alignment: .bottom, spacing: 2) {
+                                ForEach(getSortedData()) { hourData in
+                                    VStack(spacing: 0) {
+                                        // バーの高さ
+                                        if getValue(hourData) > 0 {
+                                            ZStack(alignment: .top) {
+                                                // 値ラベル
+                                                Text(getValueLabel(hourData))
+                                                    .font(.system(size: 9))
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 4)
+                                                    .padding(.vertical, 2)
+                                                    .background(getBarColor(hourData).opacity(0.8))
+                                                    .cornerRadius(4)
+                                                    .offset(y: -20)
+                                                    .opacity(getBarHeight(hourData) > 30 ? 1 : 0)
+                                                
+                                                // バー
+                                                Rectangle()
+                                                    .fill(getBarColor(hourData))
+                                                    .frame(width: getBarWidth(), height: getBarHeight(hourData))
+                                            }
+                                        }
+                                        
+                                        // 時間ラベル (3時間ごとに表示)
+                                        if hourData.hour % 3 == 0 {
+                                            Text("\(hourData.hour)")
+                                                .font(.system(size: 10))
+                                                .foregroundColor(AppColors.textPrimary)
+                                                .frame(height: 20)
+                                                .rotationEffect(Angle(degrees: 0)) // 通常表示
+                                        } else {
+                                            Spacer()
+                                                .frame(height: 20)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .frame(height: 220)
+                        
+                        // 推奨限度量ライン（アルコール表示の場合のみ）
+                        if viewModel.selectedDataType == .alcohol {
+                            GeometryReader { geometry in
+                                let maxBarHeight: CGFloat = 200
+                                let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
+                                
+                                HStack {
+                                    // 左側のラベル
+                                    Text("\(Int(viewModel.dailyLimit))g")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 2)
+                                        .background(Color.red.opacity(0.8))
+                                        .cornerRadius(4)
+                                    
+                                    // ライン
+                                    Rectangle()
+                                        .fill(Color.red.opacity(0.7))
+                                        .frame(height: 2)
+                                        .padding(.leading, 4)
+                                }
+                                .offset(y: maxBarHeight - limitLineHeight)
+                            }
+                            .frame(height: 200)
+                        }
                     }
                 }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(AppConstants.UI.cornerRadius)
+                .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
                 
-                // X-axis label
+                // X軸ラベル
                 Text("時間")
                     .font(AppFonts.caption)
                     .foregroundColor(AppColors.textSecondary)
@@ -153,6 +217,32 @@ struct DailyGraphView: View {
         }
     }
     
+    // 時間順にソートされたデータを取得
+    private func getSortedData() -> [StatisticsViewModel.DailyStatData] {
+        return viewModel.dailyData.sorted(by: { $0.hour < $1.hour })
+    }
+    
+    // バーの幅を計算（全体の幅に応じて調整）
+    private func getBarWidth() -> CGFloat {
+        // 24時間分表示する場合、画面幅の約80%を24で割る
+        let screenWidth = UIScreen.main.bounds.width
+        let graphWidth = screenWidth * 0.8
+        return (graphWidth / 24) - 4 // 間隔を確保するため少し小さく
+    }
+    
+    // 選択されたデータタイプに基づく値を取得
+    private func getValue(_ data: StatisticsViewModel.DailyStatData) -> Double {
+        switch viewModel.selectedDataType {
+        case .alcohol:
+            return data.alcoholGrams
+        case .spending:
+            return data.spending
+        case .count:
+            return Double(data.count)
+        }
+    }
+    
+    // 値ラベルを取得
     private func getValueLabel(_ data: StatisticsViewModel.DailyStatData) -> String {
         switch viewModel.selectedDataType {
         case .alcohol:
@@ -164,66 +254,65 @@ struct DailyGraphView: View {
         }
     }
     
+    // バーの高さを計算
     private func getBarHeight(_ data: StatisticsViewModel.DailyStatData) -> CGFloat {
-        let maxHeight: CGFloat = 150
+        let maxHeight: CGFloat = 180
         
-        // Get value based on data type
-        let value: Double
+        // データタイプに基づく値を取得
+        let value = getValue(data)
         let maxValue: Double
         
         switch viewModel.selectedDataType {
         case .alcohol:
-            value = data.alcoholGrams
             // 最大値を調整して見やすくする
             let highestValue = viewModel.dailyData.map { $0.alcoholGrams }.max() ?? 0
             maxValue = max(viewModel.dailyLimit * 1.2, highestValue * 1.1)
         case .spending:
-            value = data.spending
             maxValue = viewModel.dailyData.map { $0.spending }.max() ?? 0
         case .count:
-            value = Double(data.count)
             maxValue = Double(viewModel.dailyData.map { $0.count }.max() ?? 0)
         }
         
-        // Avoid division by zero
+        // 0除算を防ぐ
         guard maxValue > 0 else { return 0 }
         
         return CGFloat(value / maxValue) * maxHeight
     }
     
+    // 推奨限度量ラインの高さを計算
     private func getLimitLineHeight(maxHeight: CGFloat) -> CGFloat {
+        guard viewModel.selectedDataType == .alcohol else { return 0 }
+        
         let maxValue: Double
         
-        switch viewModel.selectedDataType {
-        case .alcohol:
-            // 最大値を調整して見やすくする
-            let highestValue = viewModel.dailyData.map { $0.alcoholGrams }.max() ?? 0
-            maxValue = max(viewModel.dailyLimit * 1.2, highestValue * 1.1)
-        case .spending, .count:
-            return 0 // 他のタイプでは表示しない
-        }
+        // 最大値を調整して見やすくする
+        let highestValue = viewModel.dailyData.map { $0.alcoholGrams }.max() ?? 0
+        maxValue = max(viewModel.dailyLimit * 1.2, highestValue * 1.1)
         
-        // Avoid division by zero
+        // 0除算を防ぐ
         guard maxValue > 0 else { return 0 }
         
         return CGFloat(viewModel.dailyLimit / maxValue) * maxHeight
     }
     
+    // バーの色を取得
     private func getBarColor(_ data: StatisticsViewModel.DailyStatData) -> Color {
         switch viewModel.selectedDataType {
         case .alcohol:
-            // Coloring based on alcohol amount
+            // アルコール量に基づく色分け
             if data.alcoholGrams > viewModel.dailyLimit {
                 return AppColors.drinkLevelRisky
             } else if data.alcoholGrams > viewModel.dailyLimit * 0.7 {
                 return AppColors.drinkLevelModerate
-            } else {
+            } else if data.alcoholGrams > 0 {
                 return AppColors.drinkLevelSafe
+            } else {
+                return Color.gray.opacity(0.2)
             }
         case .spending:
-            return AppColors.secondary
+            return data.spending > 0 ? AppColors.secondary : Color.gray.opacity(0.2)
         case .count:
-            return AppColors.accent
+            return data.count > 0 ? AppColors.accent : Color.gray.opacity(0.2)
         }
     }
 }
@@ -242,72 +331,157 @@ struct WeeklyGraphView: View {
                 .frame(maxWidth: .infinity)
         } else {
             VStack(spacing: 16) {
-                // 限度量ラインと共にグラフを表示
-                ZStack(alignment: .bottom) {
-                    // Bar chart
-                    HStack(alignment: .bottom, spacing: 8) {
-                        ForEach(viewModel.weeklyData) { data in
-                            VStack(spacing: 4) {
-                                // Value label
-                                Text(getValueLabel(data))
-                                    .font(AppFonts.caption)
-                                    .foregroundColor(AppColors.textSecondary)
-                                    .opacity(getBarHeight(data) > 20 ? 1 : 0)
-                                
-                                // Bar
-                                ZStack(alignment: .bottom) {
-                                    // Rest day indicator
-                                    if data.isAlcoholFreeDay && viewModel.selectedDataType == .alcohol {
-                                        Rectangle()
-                                            .fill(AppColors.success.opacity(0.3))
-                                            .frame(width: 20, height: 150)
-                                            .cornerRadius(6)
-                                            .overlay(
-                                                Image(systemName: "checkmark.circle.fill")
-                                                    .foregroundColor(AppColors.success)
-                                                    .font(.system(size: 16))
-                                                    .offset(y: -60)
-                                            )
-                                    }
-                                    
-                                    Rectangle()
-                                        .fill(getBarColor(data))
-                                        .frame(width: 20, height: getBarHeight(data))
-                                        .cornerRadius(6)
-                                }
-                                
-                                // Day label
-                                Text(data.dayName)
-                                    .font(AppFonts.caption)
-                                    .foregroundColor(AppColors.textSecondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
+                // グラフエリア
+                VStack(alignment: .leading, spacing: 0) {
+                    // グラフタイトルと日付範囲
+                    HStack {
+                        Text("曜日別データ")
+                            .font(AppFonts.bodyBold)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Spacer()
+                        
+                        // 日付範囲表示
+                        Text(getDateRangeText())
+                            .font(AppFonts.caption)
+                            .foregroundColor(AppColors.textSecondary)
                     }
-                    .frame(height: 200)
+                    .padding(.bottom, 8)
                     
-                    // 推奨限度量ライン（アルコール表示の場合のみ）
-                    if viewModel.selectedDataType == .alcohol {
-                        GeometryReader { geometry in
-                            let maxBarHeight: CGFloat = 150
-                            let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
-                            
-                            Rectangle()
-                                .fill(Color.red.opacity(0.5))
-                                .frame(height: 2)
-                                .offset(y: maxBarHeight - limitLineHeight)
-                                .overlay(
-                                    Text("\(Int(viewModel.dailyLimit))g")
-                                        .font(.system(size: 10))
-                                        .foregroundColor(.red)
-                                        .offset(x: -20, y: maxBarHeight - limitLineHeight - 12)
-                                )
+                    // グラフ本体
+                    ZStack(alignment: .bottom) {
+                        // グリッド線
+                        VStack(spacing: 0) {
+                            ForEach(0..<5) { i in
+                                Divider()
+                                    .background(Color.gray.opacity(0.2))
+                                    .padding(.bottom, 40)
+                            }
                         }
                         .frame(height: 200)
+                        .padding(.bottom, 20) // X軸ラベル用のスペース
+                        
+                        // バーチャート
+                        HStack(alignment: .bottom, spacing: 0) {
+                            // 固定幅のサイドスペース
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 10)
+                            
+                            // 各曜日のバー
+                            HStack(alignment: .bottom, spacing: 6) {
+                                ForEach(getSortedData()) { dayData in
+                                    VStack(spacing: 0) {
+                                        // バーの高さ
+                                        if getValue(dayData) > 0 {
+                                            ZStack(alignment: .top) {
+                                                // 値ラベル
+                                                Text(getValueLabel(dayData))
+                                                    .font(.system(size: 9))
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 4)
+                                                    .padding(.vertical, 2)
+                                                    .background(getBarColor(dayData).opacity(0.8))
+                                                    .cornerRadius(4)
+                                                    .offset(y: -20)
+                                                    .opacity(getBarHeight(dayData) > 30 ? 1 : 0)
+                                                
+                                                // 休肝日の場合は特別表示
+                                                if dayData.isAlcoholFreeDay && viewModel.selectedDataType == .alcohol {
+                                                    Rectangle()
+                                                        .fill(AppColors.success.opacity(0.3))
+                                                        .frame(width: 36, height: 180)
+                                                        .cornerRadius(6)
+                                                        .overlay(
+                                                            Image(systemName: "leaf.fill")
+                                                                .foregroundColor(AppColors.success)
+                                                                .font(.system(size: 16))
+                                                                .offset(y: -60)
+                                                        )
+                                                } else {
+                                                    // 通常のバー
+                                                    Rectangle()
+                                                        .fill(getBarColor(dayData))
+                                                        .frame(width: 36, height: getBarHeight(dayData))
+                                                        .cornerRadius(6)
+                                                }
+                                            }
+                                        } else {
+                                            // 値がゼロの場合でも、休肝日表示
+                                            if dayData.isAlcoholFreeDay && viewModel.selectedDataType == .alcohol {
+                                                ZStack {
+                                                    Rectangle()
+                                                        .fill(AppColors.success.opacity(0.3))
+                                                        .frame(width: 36, height: 30)
+                                                        .cornerRadius(6)
+                                                    
+                                                    Image(systemName: "leaf.fill")
+                                                        .foregroundColor(AppColors.success)
+                                                        .font(.system(size: 14))
+                                                }
+                                            } else {
+                                                // ゼロ値の表示（最小の高さ）
+                                                Rectangle()
+                                                    .fill(Color.gray.opacity(0.1))
+                                                    .frame(width: 36, height: 5)
+                                                    .cornerRadius(2.5)
+                                            }
+                                        }
+                                        
+                                        // 曜日ラベル
+                                        Text(dayData.dayName)
+                                            .font(.system(size: 13))
+                                            .fontWeight(isToday(dayData.date) ? .bold : .regular)
+                                            .foregroundColor(
+                                                isToday(dayData.date) ? AppColors.primary :
+                                                (calendar.component(.weekday, from: dayData.date) == 1 ? AppColors.error : AppColors.textPrimary)
+                                            )
+                                            .frame(width: 36, height: 20)
+                                    }
+                                }
+                            }
+                            
+                            // 右側のスペース
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 10)
+                        }
+                        .frame(height: 220)
+                        
+                        // 推奨限度量ライン（アルコール表示の場合のみ）
+                        if viewModel.selectedDataType == .alcohol {
+                            GeometryReader { geometry in
+                                let maxBarHeight: CGFloat = 180
+                                let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
+                                
+                                HStack {
+                                    // 左側のラベル
+                                    Text("\(Int(viewModel.dailyLimit))g")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 2)
+                                        .background(Color.red.opacity(0.8))
+                                        .cornerRadius(4)
+                                    
+                                    // ライン
+                                    Rectangle()
+                                        .fill(Color.red.opacity(0.7))
+                                        .frame(height: 2)
+                                        .padding(.leading, 4)
+                                }
+                                .offset(y: maxBarHeight - limitLineHeight)
+                            }
+                            .frame(height: 200)
+                        }
                     }
                 }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(AppConstants.UI.cornerRadius)
+                .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
                 
-                // X-axis label
+                // X軸ラベル
                 Text("曜日")
                     .font(AppFonts.caption)
                     .foregroundColor(AppColors.textSecondary)
@@ -316,6 +490,46 @@ struct WeeklyGraphView: View {
         }
     }
     
+    private var calendar: Calendar {
+        return Calendar.current
+    }
+    
+    // 日付範囲のテキストを取得
+    private func getDateRangeText() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "M/d"
+        
+        let endDate = viewModel.selectedDate
+        if let startDate = calendar.date(byAdding: .day, value: -6, to: endDate) {
+            return "\(dateFormatter.string(from: startDate))〜\(dateFormatter.string(from: endDate))"
+        }
+        
+        return "週間データ"
+    }
+    
+    // 今日かどうかを判定
+    private func isToday(_ date: Date) -> Bool {
+        return calendar.isDateInToday(date)
+    }
+    
+    // 日付順にソートされたデータを取得
+    private func getSortedData() -> [StatisticsViewModel.WeeklyStatData] {
+        return viewModel.weeklyData.sorted(by: { $0.date < $1.date })
+    }
+    
+    // 選択されたデータタイプに基づく値を取得
+    private func getValue(_ data: StatisticsViewModel.WeeklyStatData) -> Double {
+        switch viewModel.selectedDataType {
+        case .alcohol:
+            return data.alcoholGrams
+        case .spending:
+            return data.spending
+        case .count:
+            return Double(data.count)
+        }
+    }
+    
+    // 値ラベルを取得
     private func getValueLabel(_ data: StatisticsViewModel.WeeklyStatData) -> String {
         switch viewModel.selectedDataType {
         case .alcohol:
@@ -327,70 +541,69 @@ struct WeeklyGraphView: View {
         }
     }
     
+    // バーの高さを計算
     private func getBarHeight(_ data: StatisticsViewModel.WeeklyStatData) -> CGFloat {
-        let maxHeight: CGFloat = 150
+        let maxHeight: CGFloat = 180
         
-        // Get value based on data type
-        let value: Double
+        // データタイプに基づく値を取得
+        let value = getValue(data)
         let maxValue: Double
         
         switch viewModel.selectedDataType {
         case .alcohol:
-            value = data.alcoholGrams
             // 最大値を調整して見やすくする
             let highestValue = viewModel.weeklyData.map { $0.alcoholGrams }.max() ?? 0
             maxValue = max(viewModel.dailyLimit * 1.2, highestValue * 1.1)
         case .spending:
-            value = data.spending
             maxValue = viewModel.weeklyData.map { $0.spending }.max() ?? 0
         case .count:
-            value = Double(data.count)
             maxValue = Double(viewModel.weeklyData.map { $0.count }.max() ?? 0)
         }
         
-        // Avoid division by zero
+        // 0除算を防ぐ
         guard maxValue > 0 else { return 0 }
         
         return CGFloat(value / maxValue) * maxHeight
     }
     
+    // 推奨限度量ラインの高さを計算
     private func getLimitLineHeight(maxHeight: CGFloat) -> CGFloat {
+        guard viewModel.selectedDataType == .alcohol else { return 0 }
+        
         let maxValue: Double
         
-        switch viewModel.selectedDataType {
-        case .alcohol:
-            // 最大値を調整して見やすくする
-            let highestValue = viewModel.weeklyData.map { $0.alcoholGrams }.max() ?? 0
-            maxValue = max(viewModel.dailyLimit * 1.2, highestValue * 1.1)
-        case .spending, .count:
-            return 0 // 他のタイプでは表示しない
-        }
+        // 最大値を調整して見やすくする
+        let highestValue = viewModel.weeklyData.map { $0.alcoholGrams }.max() ?? 0
+        maxValue = max(viewModel.dailyLimit * 1.2, highestValue * 1.1)
         
-        // Avoid division by zero
+        // 0除算を防ぐ
         guard maxValue > 0 else { return 0 }
         
         return CGFloat(viewModel.dailyLimit / maxValue) * maxHeight
     }
     
+    // バーの色を取得
     private func getBarColor(_ data: StatisticsViewModel.WeeklyStatData) -> Color {
         if data.isAlcoholFreeDay && viewModel.selectedDataType == .alcohol {
-            return Color.clear // Rest day just shows background
+            return AppColors.success // 休肝日は緑色
         }
         
         switch viewModel.selectedDataType {
         case .alcohol:
-            // Coloring based on alcohol amount
+            // アルコール量に基づく色分け
             if data.alcoholGrams > viewModel.dailyLimit {
                 return AppColors.drinkLevelRisky
             } else if data.alcoholGrams > viewModel.dailyLimit * 0.7 {
                 return AppColors.drinkLevelModerate
-            } else {
+            } else if data.alcoholGrams > 0 {
                 return AppColors.drinkLevelSafe
+            } else {
+                return Color.gray.opacity(0.2)
             }
         case .spending:
-            return AppColors.secondary
+            return data.spending > 0 ? AppColors.secondary : Color.gray.opacity(0.2)
         case .count:
-            return AppColors.accent
+            return data.count > 0 ? AppColors.accent : Color.gray.opacity(0.2)
         }
     }
 }
@@ -407,62 +620,159 @@ struct MonthlyGraphView: View {
                 .frame(maxWidth: .infinity)
         } else {
             VStack(spacing: 16) {
-                // 限度量ラインと共にグラフを表示
-                ZStack(alignment: .bottom) {
-                    // Scrollable bar chart
+                // グラフエリア
+                VStack(alignment: .leading, spacing: 0) {
+                    // グラフタイトルと月表示
+                    HStack {
+                        Text("日別データ")
+                            .font(AppFonts.bodyBold)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Spacer()
+                        
+                        // 月表示
+                        let formatter = DateFormatter()
+                        formatter.dateFormat = "yyyy年M月"
+                        Text(formatter.string(from: viewModel.selectedDate))
+                            .font(AppFonts.caption)
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                    .padding(.bottom, 8)
+                    
+                    // スクロール可能なグラフ表示
                     ScrollView(.horizontal, showsIndicators: true) {
-                        HStack(alignment: .bottom, spacing: 4) {
-                            ForEach(viewModel.monthlyData) { data in
-                                VStack(spacing: 4) {
-                                    // Value label
-                                    Text(getValueLabel(data))
-                                        .font(AppFonts.caption)
-                                        .foregroundColor(AppColors.textSecondary)
-                                        .opacity(getBarHeight(data) > 20 ? 1 : 0)
-                                    
-                                    // Bar
-                                    ZStack(alignment: .bottom) {
-                                        // Rest day indicator
-                                        if data.isAlcoholFreeDay && viewModel.selectedDataType == .alcohol {
-                                            Rectangle()
-                                                .fill(AppColors.success.opacity(0.3))
-                                                .frame(width: 14, height: 150)
-                                                .cornerRadius(5)
-                                        }
-                                        
-                                        Rectangle()
-                                            .fill(getBarColor(data))
-                                            .frame(width: 14, height: getBarHeight(data))
-                                            .cornerRadius(5)
-                                    }
-                                    
-                                    // Day label
-                                    Text("\(data.day)")
-                                        .font(AppFonts.caption)
-                                        .foregroundColor(AppColors.textSecondary)
+                        ZStack(alignment: .bottom) {
+                            // グリッド線
+                            VStack(spacing: 0) {
+                                ForEach(0..<5) { i in
+                                    Divider()
+                                        .background(Color.gray.opacity(0.2))
+                                        .padding(.bottom, 40)
                                 }
                             }
-                        }
-                        .frame(height: 180)
-                        .padding(.horizontal, 10)
-                    }
-                    
-                    // 推奨限度量ライン（アルコール表示の場合のみ）
-                    if viewModel.selectedDataType == .alcohol {
-                        GeometryReader { geometry in
-                            let maxBarHeight: CGFloat = 150
-                            let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
+                            .frame(height: 200)
+                            .padding(.bottom, 20) // X軸ラベル用のスペース
                             
-                            Rectangle()
-                                .fill(Color.red.opacity(0.5))
-                                .frame(height: 2)
-                                .offset(y: maxBarHeight - limitLineHeight)
+                            // バーチャート
+                            HStack(alignment: .bottom, spacing: 2) {
+                                // 各日のバー
+                                ForEach(getSortedData()) { dayData in
+                                    VStack(spacing: 0) {
+                                        // バーの高さ
+                                        if getValue(dayData) > 0 {
+                                            ZStack(alignment: .top) {
+                                                // 値ラベル
+                                                Text(getValueLabel(dayData))
+                                                    .font(.system(size: 9))
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 3)
+                                                    .padding(.vertical, 2)
+                                                    .background(getBarColor(dayData).opacity(0.8))
+                                                    .cornerRadius(4)
+                                                    .offset(y: -20)
+                                                    .opacity(getBarHeight(dayData) > 30 ? 1 : 0)
+                                                
+                                                // 休肝日の場合は特別表示
+                                                if dayData.isAlcoholFreeDay && viewModel.selectedDataType == .alcohol {
+                                                    Rectangle()
+                                                        .fill(AppColors.success.opacity(0.3))
+                                                        .frame(width: 20, height: 180)
+                                                        .cornerRadius(4)
+                                                        .overlay(
+                                                            Image(systemName: "leaf.fill")
+                                                                .foregroundColor(AppColors.success)
+                                                                .font(.system(size: 10))
+                                                                .offset(y: -60)
+                                                        )
+                                                } else {
+                                                    // 通常のバー
+                                                    Rectangle()
+                                                        .fill(getBarColor(dayData))
+                                                        .frame(width: 20, height: getBarHeight(dayData))
+                                                        .cornerRadius(4)
+                                                }
+                                            }
+                                        } else {
+                                            // 値がゼロの場合でも、休肝日表示
+                                            if dayData.isAlcoholFreeDay && viewModel.selectedDataType == .alcohol {
+                                                ZStack {
+                                                    Rectangle()
+                                                        .fill(AppColors.success.opacity(0.3))
+                                                        .frame(width: 20, height: 30)
+                                                        .cornerRadius(4)
+                                                    
+                                                    Image(systemName: "leaf.fill")
+                                                        .foregroundColor(AppColors.success)
+                                                        .font(.system(size: 10))
+                                                }
+                                            } else {
+                                                // ゼロ値の表示（最小の高さ）
+                                                Rectangle()
+                                                    .fill(Color.gray.opacity(0.1))
+                                                    .frame(width: 20, height: 5)
+                                                    .cornerRadius(2.5)
+                                            }
+                                        }
+                                        
+                                        // 日付ラベル（5日ごとに表示）
+                                        if dayData.day % 5 == 0 || dayData.day == 1 {
+                                            Text("\(dayData.day)")
+                                                .font(.system(size: 10))
+                                                .fontWeight(isToday(dayData.date) ? .bold : .regular)
+                                                .foregroundColor(
+                                                    isToday(dayData.date) ? AppColors.primary :
+                                                    (isWeekend(dayData.date) ? AppColors.error : AppColors.textPrimary)
+                                                )
+                                                .frame(height: 20)
+                                        } else {
+                                            // 日付ラベルがない場合でも、スペースを確保
+                                            Rectangle()
+                                                .fill(Color.clear)
+                                                .frame(width: 20, height: 20)
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 10)
+                            .frame(height: 220)
+                            
+                            // 推奨限度量ライン（アルコール表示の場合のみ）
+                            if viewModel.selectedDataType == .alcohol {
+                                GeometryReader { geometry in
+                                    let maxBarHeight: CGFloat = 180
+                                    let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
+                                    
+                                    HStack {
+                                        // 左側のラベル
+                                        Text("\(Int(viewModel.dailyLimit))g")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 4)
+                                            .padding(.vertical, 2)
+                                            .background(Color.red.opacity(0.8))
+                                            .cornerRadius(4)
+                                        
+                                        // ライン
+                                        Rectangle()
+                                            .fill(Color.red.opacity(0.7))
+                                            .frame(height: 2)
+                                            .padding(.leading, 4)
+                                    }
+                                    .offset(y: maxBarHeight - limitLineHeight)
+                                }
+                                .frame(height: 200)
+                            }
                         }
-                        .frame(height: 180)
+                        // グラフの幅を十分に確保（日数×バー幅）
+                        .frame(width: max(UIScreen.main.bounds.width - 40, CGFloat(viewModel.monthlyData.count * 24)))
                     }
                 }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(AppConstants.UI.cornerRadius)
+                .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
                 
-                // X-axis label
+                // X軸ラベル
                 Text("日付")
                     .font(AppFonts.caption)
                     .foregroundColor(AppColors.textSecondary)
@@ -471,6 +781,39 @@ struct MonthlyGraphView: View {
         }
     }
     
+    private var calendar: Calendar {
+        return Calendar.current
+    }
+    
+    // 今日かどうかを判定
+    private func isToday(_ date: Date) -> Bool {
+        return calendar.isDateInToday(date)
+    }
+    
+    // 週末かどうかを判定
+    private func isWeekend(_ date: Date) -> Bool {
+        let weekday = calendar.component(.weekday, from: date)
+        return weekday == 1 || weekday == 7 // 1:日曜日、7:土曜日
+    }
+    
+    // 日付順にソートされたデータを取得
+    private func getSortedData() -> [StatisticsViewModel.MonthlyStatData] {
+        return viewModel.monthlyData.sorted(by: { $0.day < $1.day })
+    }
+    
+    // 選択されたデータタイプに基づく値を取得
+    private func getValue(_ data: StatisticsViewModel.MonthlyStatData) -> Double {
+        switch viewModel.selectedDataType {
+        case .alcohol:
+            return data.alcoholGrams
+        case .spending:
+            return data.spending
+        case .count:
+            return Double(data.count)
+        }
+    }
+    
+    // 値ラベルを取得
     private func getValueLabel(_ data: StatisticsViewModel.MonthlyStatData) -> String {
         switch viewModel.selectedDataType {
         case .alcohol:
@@ -482,70 +825,69 @@ struct MonthlyGraphView: View {
         }
     }
     
+    // バーの高さを計算
     private func getBarHeight(_ data: StatisticsViewModel.MonthlyStatData) -> CGFloat {
-        let maxHeight: CGFloat = 150
+        let maxHeight: CGFloat = 180
         
-        // Get value based on data type
-        let value: Double
+        // データタイプに基づく値を取得
+        let value = getValue(data)
         let maxValue: Double
         
         switch viewModel.selectedDataType {
         case .alcohol:
-            value = data.alcoholGrams
             // 最大値を調整して見やすくする
             let highestValue = viewModel.monthlyData.map { $0.alcoholGrams }.max() ?? 0
             maxValue = max(viewModel.dailyLimit * 1.2, highestValue * 1.1)
         case .spending:
-            value = data.spending
             maxValue = viewModel.monthlyData.map { $0.spending }.max() ?? 0
         case .count:
-            value = Double(data.count)
             maxValue = Double(viewModel.monthlyData.map { $0.count }.max() ?? 0)
         }
         
-        // Avoid division by zero
+        // 0除算を防ぐ
         guard maxValue > 0 else { return 0 }
         
         return CGFloat(value / maxValue) * maxHeight
     }
     
+    // 推奨限度量ラインの高さを計算
     private func getLimitLineHeight(maxHeight: CGFloat) -> CGFloat {
+        guard viewModel.selectedDataType == .alcohol else { return 0 }
+        
         let maxValue: Double
         
-        switch viewModel.selectedDataType {
-        case .alcohol:
-            // 最大値を調整して見やすくする
-            let highestValue = viewModel.monthlyData.map { $0.alcoholGrams }.max() ?? 0
-            maxValue = max(viewModel.dailyLimit * 1.2, highestValue * 1.1)
-        case .spending, .count:
-            return 0 // 他のタイプでは表示しない
-        }
+        // 最大値を調整して見やすくする
+        let highestValue = viewModel.monthlyData.map { $0.alcoholGrams }.max() ?? 0
+        maxValue = max(viewModel.dailyLimit * 1.2, highestValue * 1.1)
         
-        // Avoid division by zero
+        // 0除算を防ぐ
         guard maxValue > 0 else { return 0 }
         
         return CGFloat(viewModel.dailyLimit / maxValue) * maxHeight
     }
     
+    // バーの色を取得
     private func getBarColor(_ data: StatisticsViewModel.MonthlyStatData) -> Color {
         if data.isAlcoholFreeDay && viewModel.selectedDataType == .alcohol {
-            return Color.clear // Rest day just shows background
+            return AppColors.success // 休肝日は緑色
         }
         
         switch viewModel.selectedDataType {
         case .alcohol:
-            // Coloring based on alcohol amount
+            // アルコール量に基づく色分け
             if data.alcoholGrams > viewModel.dailyLimit {
                 return AppColors.drinkLevelRisky
             } else if data.alcoholGrams > viewModel.dailyLimit * 0.7 {
                 return AppColors.drinkLevelModerate
-            } else {
+            } else if data.alcoholGrams > 0 {
                 return AppColors.drinkLevelSafe
+            } else {
+                return Color.gray.opacity(0.2)
             }
         case .spending:
-            return AppColors.secondary
+            return data.spending > 0 ? AppColors.secondary : Color.gray.opacity(0.2)
         case .count:
-            return AppColors.accent
+            return data.count > 0 ? AppColors.accent : Color.gray.opacity(0.2)
         }
     }
 }
