@@ -137,192 +137,191 @@ struct UserProfileSummaryView: View {
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text
-                (viewModel.displayName.isEmpty ? "ユーザー名を設定" : viewModel.displayName)
-                                    .font(AppFonts.title3)
-                                    .foregroundColor(AppColors.textPrimary)
-                                
-                                Text("\(viewModel.age)歳 • \(viewModel.gender.rawValue) • \(Int(viewModel.weight))kg")
-                                    .font(AppFonts.body)
-                                    .foregroundColor(AppColors.textSecondary)
-                                
-                                if let bmi = viewModel.bmi {
-                                    Text("BMI: \(String(format: "%.1f", bmi)) (\(viewModel.bmiCategory))")
-                                        .font(AppFonts.caption)
-                                        .foregroundColor(AppColors.textTertiary)
-                                }
-                            }
-                            .padding(.leading)
-                            
-                            Spacer()
-                            
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(AppColors.textTertiary)
-                                .font(.system(size: 14))
-                        }
-                        .padding()
-                        .background(AppColors.cardBackground)
-                        .cornerRadius(AppConstants.UI.cornerRadius)
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-                    }
+                Text(viewModel.displayName.isEmpty ? "ユーザー名を設定" : viewModel.displayName)
+                    .font(AppFonts.title3)
+                    .foregroundColor(AppColors.textPrimary)
+                
+                Text("\(viewModel.age)歳 • \(viewModel.gender.rawValue) • \(Int(viewModel.weight))kg")
+                    .font(AppFonts.body)
+                    .foregroundColor(AppColors.textSecondary)
+                
+                if let bmi = viewModel.bmi {
+                    Text("BMI: \(String(format: "%.1f", bmi)) (\(viewModel.bmiCategory))")
+                        .font(AppFonts.caption)
+                        .foregroundColor(AppColors.textTertiary)
                 }
+            }
+            .padding(.leading)
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .foregroundColor(AppColors.textTertiary)
+                .font(.system(size: 14))
+        }
+        .padding()
+        .background(AppColors.cardBackground)
+        .cornerRadius(AppConstants.UI.cornerRadius)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+}
 
-                // Settings section view
-                struct SettingsSectionView<Content: View>: View {
-                    let title: String
-                    let content: Content
-                    
-                    init(title: String, @ViewBuilder content: () -> Content) {
-                        self.title = title
-                        self.content = content()
-                    }
-                    
-                    var body: some View {
-                        VStack(alignment: .leading, spacing: AppConstants.UI.smallPadding) {
-                            Text(title)
-                                .font(AppFonts.title3)
-                                .foregroundColor(AppColors.textPrimary)
-                                .padding(.horizontal)
-                            
-                            VStack(spacing: 0) {
-                                content
-                            }
-                            .background(AppColors.cardBackground)
-                            .cornerRadius(AppConstants.UI.cornerRadius)
-                            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-                        }
-                    }
-                }
+// Settings section view
+struct SettingsSectionView<Content: View>: View {
+    let title: String
+    let content: Content
+    
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppConstants.UI.smallPadding) {
+            Text(title)
+                .font(AppFonts.title3)
+                .foregroundColor(AppColors.textPrimary)
+                .padding(.horizontal)
+            
+            VStack(spacing: 0) {
+                content
+            }
+            .background(AppColors.cardBackground)
+            .cornerRadius(AppConstants.UI.cornerRadius)
+            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        }
+    }
+}
 
-                // Settings item view（タップ可能なアイテム）
-                struct SettingsItemView: View {
-                    let icon: String
-                    let title: String
-                    let subtitle: String
-                    let iconColor: Color
-                    
-                    var body: some View {
-                        HStack {
-                            Image(systemName: icon)
-                                .foregroundColor(iconColor)
-                                .font(.system(size: 20))
-                                .frame(width: 30)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(title)
-                                    .font(AppFonts.body)
-                                    .foregroundColor(AppColors.textPrimary)
-                                
-                                Text(subtitle)
-                                    .font(AppFonts.caption)
-                                    .foregroundColor(AppColors.textSecondary)
-                            }
-                            
-                            Spacer()
-                            
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(AppColors.textTertiary)
-                                .font(.system(size: 14))
-                        }
-                        .padding()
-                        .background(AppColors.cardBackground)
-                        Divider().padding(.leading, 60)
-                    }
-                }
+// Settings item view（タップ可能なアイテム）
+struct SettingsItemView: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let iconColor: Color
+    
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(iconColor)
+                .font(.system(size: 20))
+                .frame(width: 30)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(AppFonts.body)
+                    .foregroundColor(AppColors.textPrimary)
+                
+                Text(subtitle)
+                    .font(AppFonts.caption)
+                    .foregroundColor(AppColors.textSecondary)
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .foregroundColor(AppColors.textTertiary)
+                .font(.system(size: 14))
+        }
+        .padding()
+        .background(AppColors.cardBackground)
+        Divider().padding(.leading, 60)
+    }
+}
 
-                // About app view
-                struct AboutAppView: View {
-                    @Environment(\.presentationMode) var presentationMode
+// About app view
+struct AboutAppView: View {
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    Image(systemName: "wineglass.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(AppColors.primary)
+                        .padding(.top, 40)
                     
-                    var body: some View {
-                        NavigationView {
-                            ScrollView {
-                                VStack(spacing: 20) {
-                                    Image(systemName: "wineglass.fill")
-                                        .font(.system(size: 60))
-                                        .foregroundColor(AppColors.primary)
-                                        .padding(.top, 40)
-                                    
-                                    Text(AppConstants.appName)
-                                        .font(AppFonts.largeTitle)
-                                        .foregroundColor(AppColors.textPrimary)
-                                    
-                                    Text("バージョン \(AppConstants.appVersion)")
-                                        .font(AppFonts.body)
-                                        .foregroundColor(AppColors.textSecondary)
-                                    
-                                    VStack(alignment: .leading, spacing: 10) {
-                                        Text("このアプリについて")
-                                            .font(AppFonts.title3)
-                                            .foregroundColor(AppColors.textPrimary)
-                                            .padding(.top)
-                                        
-                                        Text("DrinkTrackerは、あなたの飲酒習慣を記録・分析し、健康的な飲酒習慣の形成と節約をサポートするアプリです。")
-                                            .font(AppFonts.body)
-                                            .foregroundColor(AppColors.textPrimary)
-                                            .multilineTextAlignment(.leading)
-                                        
-                                        Text("主な機能:")
-                                            .font(AppFonts.bodyBold)
-                                            .foregroundColor(AppColors.textPrimary)
-                                            .padding(.top, 5)
-                                        
-                                        bulletPoint("飲酒記録の簡単な記録と管理")
-                                        bulletPoint("統計情報とトレンドの視覚化")
-                                        bulletPoint("飲酒の健康影響と節約額の計算")
-                                        bulletPoint("パーソナライズされた健康アドバイス")
-                                        
-                                        Divider()
-                                            .padding(.vertical, 10)
-                                        
-                                        Text("体重と身長設定の効果")
-                                            .font(AppFonts.bodyBold)
-                                            .foregroundColor(AppColors.textPrimary)
-                                            .padding(.vertical, 5)
-                                        
-                                        Text("体重は血中アルコール濃度(BAC)の計算に直接影響します。同じ量のアルコールでも、体重によって血中アルコール濃度が変わるため、より正確な健康アドバイスを提供できます。")
-                                            .font(AppFonts.body)
-                                            .foregroundColor(AppColors.textPrimary)
-                                            .multilineTextAlignment(.leading)
-                                        
-                                        Text("身長と体重からBMI（体格指数）を計算し、全体的な健康状態の参考値として表示します。")
-                                            .font(AppFonts.body)
-                                            .foregroundColor(AppColors.textPrimary)
-                                            .multilineTextAlignment(.leading)
-                                            .padding(.top, 5)
-                                    }
-                                    .padding()
-                                    .background(AppColors.cardBackground)
-                                    .cornerRadius(AppConstants.UI.cornerRadius)
-                                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-                                    .padding(.horizontal)
-                                    
-                                    Spacer()
-                                }
-                                .padding()
-                            }
-                            .navigationTitle("アプリについて")
-                            .navigationBarTitleDisplayMode(.inline)
-                            .toolbar {
-                                ToolbarItem(placement: .navigationBarTrailing) {
-                                    Button("閉じる") {
-                                        presentationMode.wrappedValue.dismiss()
-                                    }
-                                }
-                            }
-                        }
+                    Text(AppConstants.appName)
+                        .font(AppFonts.largeTitle)
+                        .foregroundColor(AppColors.textPrimary)
+                    
+                    Text("バージョン \(AppConstants.appVersion)")
+                        .font(AppFonts.body)
+                        .foregroundColor(AppColors.textSecondary)
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("このアプリについて")
+                            .font(AppFonts.title3)
+                            .foregroundColor(AppColors.textPrimary)
+                            .padding(.top)
+                        
+                        Text("DrinkTrackerは、あなたの飲酒習慣を記録・分析し、健康的な飲酒習慣の形成と節約をサポートするアプリです。")
+                            .font(AppFonts.body)
+                            .foregroundColor(AppColors.textPrimary)
+                            .multilineTextAlignment(.leading)
+                        
+                        Text("主な機能:")
+                            .font(AppFonts.bodyBold)
+                            .foregroundColor(AppColors.textPrimary)
+                            .padding(.top, 5)
+                        
+                        bulletPoint("飲酒記録の簡単な記録と管理")
+                        bulletPoint("統計情報とトレンドの視覚化")
+                        bulletPoint("飲酒の健康影響と節約額の計算")
+                        bulletPoint("パーソナライズされた健康アドバイス")
+                        
+                        Divider()
+                            .padding(.vertical, 10)
+                        
+                        Text("体重と身長設定の効果")
+                            .font(AppFonts.bodyBold)
+                            .foregroundColor(AppColors.textPrimary)
+                            .padding(.vertical, 5)
+                        
+                        Text("体重は血中アルコール濃度(BAC)の計算に直接影響します。同じ量のアルコールでも、体重によって血中アルコール濃度が変わるため、より正確な健康アドバイスを提供できます。")
+                            .font(AppFonts.body)
+                            .foregroundColor(AppColors.textPrimary)
+                            .multilineTextAlignment(.leading)
+                        
+                        Text("身長と体重からBMI（体格指数）を計算し、全体的な健康状態の参考値として表示します。")
+                            .font(AppFonts.body)
+                            .foregroundColor(AppColors.textPrimary)
+                            .multilineTextAlignment(.leading)
+                            .padding(.top, 5)
                     }
+                    .padding()
+                    .background(AppColors.cardBackground)
+                    .cornerRadius(AppConstants.UI.cornerRadius)
+                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    .padding(.horizontal)
                     
-                    private func bulletPoint(_ text: String) -> some View {
-                        HStack(alignment: .top, spacing: 10) {
-                            Text("•")
-                                .font(AppFonts.body)
-                                .foregroundColor(AppColors.primary)
-                            
-                            Text(text)
-                                .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
-                                .multilineTextAlignment(.leading)
-                        }
+                    Spacer()
+                }
+                .padding()
+            }
+            .navigationTitle("アプリについて")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("閉じる") {
+                        presentationMode.wrappedValue.dismiss()
                     }
                 }
+            }
+        }
+    }
+    
+    private func bulletPoint(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text("•")
+                .font(AppFonts.body)
+                .foregroundColor(AppColors.primary)
+            
+            Text(text)
+                .font(AppFonts.body)
+                .foregroundColor(AppColors.textPrimary)
+                .multilineTextAlignment(.leading)
+        }
+    }
+}
