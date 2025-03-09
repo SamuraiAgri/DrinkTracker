@@ -4,6 +4,10 @@ struct UserProfileView: View {
     @ObservedObject var viewModel: SettingsViewModel
     @Environment(\.presentationMode) var presentationMode
     
+    // 入力用の文字列
+    @State private var weightString: String = ""
+    @State private var heightString: String = ""
+    
     var body: some View {
         NavigationView {
             Form {
@@ -23,28 +27,61 @@ struct UserProfileView: View {
                     )
                     .datePickerStyle(WheelDatePickerStyle())
                     
-                    Stepper(value: $viewModel.weight, in: 30...200, step: 0.5) {
-                        HStack {
-                            Text("体重")
-                            Spacer()
-                            Text("\(String(format: "%.1f", viewModel.weight)) kg")
-                                .foregroundColor(AppColors.textSecondary)
-                        }
+                    // 体重入力 - TextFieldとStepperを併用
+                    HStack {
+                        Text("体重")
+                        
+                        Spacer()
+                        
+                        TextField("体重", text: $weightString)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .onChange(of: weightString) { newValue in
+                                if let weight = Double(newValue) {
+                                    viewModel.weight = weight
+                                }
+                            }
+                        
+                        Text("kg")
+                            .foregroundColor(AppColors.textSecondary)
+                            .padding(.leading, 4)
+                        
+                        Stepper("", value: $viewModel.weight, in: 30...200, step: 0.5)
+                            .labelsHidden()
+                            .onChange(of: viewModel.weight) { newValue in
+                                weightString = String(format: "%.1f", newValue)
+                            }
                     }
                     
-                    Stepper(value: Binding(
-                        get: { viewModel.height ?? 170.0 },
-                        set: { viewModel.height = $0 }
-                    ), in: 100...220, step: 0.5) {
-                        HStack {
-                            Text("身長")
-                            Spacer()
-                            if let height = viewModel.height {
-                                Text("\(String(format: "%.1f", height)) cm")
-                                    .foregroundColor(AppColors.textSecondary)
-                            } else {
-                                Text("未設定")
-                                    .foregroundColor(AppColors.textTertiary)
+                    // 身長入力 - TextFieldとStepperを併用
+                    HStack {
+                        Text("身長")
+                        
+                        Spacer()
+                        
+                        TextField("身長", text: $heightString)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .onChange(of: heightString) { newValue in
+                                if let height = Double(newValue) {
+                                    viewModel.height = height
+                                }
+                            }
+                        
+                        Text("cm")
+                            .foregroundColor(AppColors.textSecondary)
+                            .padding(.leading, 4)
+                        
+                        Stepper("", value: Binding(
+                            get: { viewModel.height ?? 170.0 },
+                            set: { viewModel.height = $0 }
+                        ), in: 100...220, step: 0.5)
+                        .labelsHidden()
+                        .onChange(of: viewModel.height) { newValue in
+                            if let height = newValue {
+                                heightString = String(format: "%.1f", height)
                             }
                         }
                     }
@@ -92,11 +129,28 @@ struct UserProfileView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("保存") {
+                        // テキストフィールドから直接入力された値を反映
+                        if let weight = Double(weightString) {
+                            viewModel.weight = weight
+                        }
+                        if let height = Double(heightString) {
+                            viewModel.height = height
+                        }
+                        
                         viewModel.saveProfile()
                         presentationMode.wrappedValue.dismiss()
                     }
                     .font(AppFonts.bodyBold)
                     .foregroundColor(AppColors.primary)
+                }
+            }
+            .onAppear {
+                // 初期値をセット
+                weightString = String(format: "%.1f", viewModel.weight)
+                if let height = viewModel.height {
+                    heightString = String(format: "%.1f", height)
+                } else {
+                    heightString = ""
                 }
             }
         }
