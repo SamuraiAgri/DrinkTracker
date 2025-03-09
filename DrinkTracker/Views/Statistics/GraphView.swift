@@ -231,6 +231,12 @@ struct DailyGraphView: View {
         return (graphWidth / 24) - 4 // 間隔を確保するため少し小さく
     }
     
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy年M月d日"
+        return formatter.string(from: date)
+    }
+    
     // 選択されたデータタイプに基づく値を取得
     private func getValue(_ data: StatisticsViewModel.DailyStatData) -> Double {
         switch viewModel.selectedDataType {
