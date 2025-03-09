@@ -4,6 +4,7 @@ struct CalendarView: View {
     @ObservedObject var viewModel: StatisticsViewModel
     @State private var selectedDate: Date = Date()
     @State private var showingDayEditor: Bool = false
+    var onAddDrink: (Date) -> Void
     
     var body: some View {
         VStack(spacing: AppConstants.UI.smallPadding) {
@@ -68,7 +69,8 @@ struct CalendarView: View {
             DayRecordsEditView(
                 date: selectedDate,
                 records: viewModel.drinkDataManager.getDrinkRecords(for: selectedDate),
-                drinkDataManager: viewModel.drinkDataManager
+                drinkDataManager: viewModel.drinkDataManager,
+                onAddDrink: onAddDrink
             )
         }
     }
@@ -237,41 +239,38 @@ struct CalendarDayView: View {
                         )
                 }
                 
-                // アルコール情報表示（現在の月の日付のみ）
+                // アルコール情報表示（現在の月の日付のみ、過去の日付制限を解除）
                 if isCurrentMonth {
-                    // 今日までの日付のみ表示
-                    if day <= Date() {
-                        let dayRecords = viewModel.drinkDataManager.getDrinkRecords(for: day)
+                    let dayRecords = viewModel.drinkDataManager.getDrinkRecords(for: day)
+                    
+                    // 飲酒記録がある場合
+                    if !dayRecords.isEmpty {
+                        let totalAlcohol = dayRecords.reduce(0) { $0 + $1.pureAlcoholGrams }
                         
-                        // 飲酒記録がある場合
-                        if !dayRecords.isEmpty {
-                            let totalAlcohol = dayRecords.reduce(0) { $0 + $1.pureAlcoholGrams }
-                            
-                            // 絵文字を表示
-                            Text(getAlcoholEmoji(totalAlcohol))
-                                .font(.system(size: 16))
-                                .padding(.top, 2)
-                                .overlay(
-                                    isSelectedDay ? nil :
-                                        ZStack {
-                                            Text("\(Int(totalAlcohol))g")
-                                                .font(.system(size: 8))
-                                                .foregroundColor(.white)
-                                                .padding(.horizontal, 2)
-                                                .background(
-                                                    Capsule()
-                                                        .fill(getColorForAmount(totalAlcohol))
-                                                )
-                                        }
-                                        .offset(y: 10)
-                                )
-                        }
-                        // 飲酒記録がない場合（休肝日）
-                        else if viewModel.drinkDataManager.isAlcoholFreeDay(day) {
-                            Text("🌱")
-                                .font(.system(size: 14))
-                                .padding(.top, 2)
-                        }
+                        // 絵文字を表示
+                        Text(getAlcoholEmoji(totalAlcohol))
+                            .font(.system(size: 16))
+                            .padding(.top, 2)
+                            .overlay(
+                                isSelectedDay ? nil :
+                                    ZStack {
+                                        Text("\(Int(totalAlcohol))g")
+                                            .font(.system(size: 8))
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 2)
+                                            .background(
+                                                Capsule()
+                                                    .fill(getColorForAmount(totalAlcohol))
+                                            )
+                                    }
+                                    .offset(y: 10)
+                            )
+                    }
+                    // 飲酒記録がない場合（休肝日）
+                    else if viewModel.drinkDataManager.isAlcoholFreeDay(day) {
+                        Text("🌱")
+                            .font(.system(size: 14))
+                            .padding(.top, 2)
                     }
                 }
             }
@@ -327,11 +326,12 @@ struct CalendarDayView: View {
     }
 }
 
-// 日付別の記録編集ビュー
+// 日付別の記録編集ビュー（onAddDrinkを追加）
 struct DayRecordsEditView: View {
     let date: Date
     let records: [DrinkRecord]
     let drinkDataManager: DrinkDataManager
+    let onAddDrink: (Date) -> Void
     @State private var drinkToEdit: DrinkRecord? = nil
     @State private var showingNewDrinkSheet: Bool = false
     @Environment(\.presentationMode) var presentationMode
@@ -422,8 +422,9 @@ struct DayRecordsEditView: View {
                 
                 // 新規追加ボタン
                 Button(action: {
-                    // 新規ドリンク追加時の日付を現在の表示日にセット
-                    showingNewDrinkSheet = true
+                    // onAddDrinkを使用して日付を渡す
+                    onAddDrink(date)
+                    presentationMode.wrappedValue.dismiss()
                 }) {
                     HStack {
                         Image(systemName: "plus.circle.fill")
@@ -453,14 +454,6 @@ struct DayRecordsEditView: View {
         }
         .sheet(item: $drinkToEdit) { drink in
             DrinkRecordView(drinkDataManager: drinkDataManager, existingDrink: drink)
-        }
-        .sheet(isPresented: $showingNewDrinkSheet) {
-            let newDrink = DrinkRecord(
-                date: date,
-                drinkType: .beer,
-                volume: 350.0
-            )
-            DrinkRecordView(drinkDataManager: drinkDataManager, existingDrink: newDrink)
         }
     }
     

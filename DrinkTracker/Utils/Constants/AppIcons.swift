@@ -25,13 +25,15 @@ struct AppIcons {
         static let notification = Image(systemName: "bell")
     }
     
-    // Drink type icons - DrinkIconNames に名前変更
+    // Drink type icons
     struct DrinkIconNames {
         static let beer = "beer"
         static let wine = "wine"
         static let spirits = "spirits"
         static let sake = "sake"
         static let cocktail = "cocktail"
+        static let highball = "highball"
+        static let chuhai = "chuhai"
         static let other = "other"
     }
     
@@ -48,6 +50,10 @@ struct AppIcons {
             return Image(systemName: "takeoutbag.and.cup.and.straw.fill")
         case .cocktail:
             return Image(systemName: "waterbottle.fill")
+        case .highball:
+            return Image(systemName: "bubbles.and.sparkles")
+        case .chuhai:
+            return Image(systemName: "sparkles")
         case .other:
             return Image(systemName: "drop.fill")
         }

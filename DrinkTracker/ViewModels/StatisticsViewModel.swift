@@ -4,12 +4,10 @@ import SwiftUI
 
 class StatisticsViewModel: ObservableObject {
     // データ
-    @Published var dailyData: [DailyStatData] = []
-    @Published var weeklyData: [WeeklyStatData] = []
     @Published var monthlyData: [MonthlyStatData] = []
     
     // 設定
-    @Published var selectedTimeFrame: TimeFrame = .week
+    @Published var selectedTimeFrame: TimeFrame = .month
     @Published var selectedDataType: DataType = .alcohol
     @Published var selectedDate: Date = Date()
     
@@ -50,107 +48,7 @@ class StatisticsViewModel: ObservableObject {
     
     // データの更新
     func updateData() {
-        switch selectedTimeFrame {
-        case .day:
-            updateDailyData()
-        case .week:
-            updateWeeklyData()
-        case .month:
-            updateMonthlyData()
-        }
-    }
-    
-    // 日別データの更新（最近の24時間）
-    private func updateDailyData() {
-        let calendar = Calendar.current
-        let now = Date()
-        var hourlyData: [DailyStatData] = []
-        
-        // 過去24時間分のデータを集計
-        for hourOffset in 0..<24 {
-            guard let hourDate = calendar.date(
-                byAdding: .hour,
-                value: -hourOffset,
-                to: now
-            ) else { continue }
-            
-            // その時間帯の記録を取得
-            let hourStart = calendar.date(
-                bySettingHour: calendar.component(.hour, from: hourDate),
-                minute: 0,
-                second: 0,
-                of: hourDate
-            ) ?? hourDate
-            
-            let hourEnd = calendar.date(
-                byAdding: .hour,
-                value: 1,
-                to: hourStart
-            ) ?? hourStart
-            
-            // この時間帯の記録をフィルタリング
-            let hourlyRecords = drinkDataManager.drinkRecords.filter { record in
-                record.date >= hourStart && record.date < hourEnd
-            }
-            
-            // 時間ごとの集計データ
-            let alcoholGrams = hourlyRecords.reduce(0) { $0 + $1.pureAlcoholGrams }
-            let spending = hourlyRecords.reduce(0) { $0 + ($1.price ?? 0) }
-            let count = hourlyRecords.count
-            
-            // データポイントを作成
-            let dataPoint = DailyStatData(
-                hour: calendar.component(.hour, from: hourDate),
-                date: hourDate,
-                alcoholGrams: alcoholGrams,
-                spending: spending,
-                count: count
-            )
-            
-            hourlyData.append(dataPoint)
-        }
-        
-        // 時間順にソート
-        dailyData = hourlyData.sorted(by: { $0.date < $1.date })
-    }
-    
-    // 週間データの更新（過去7日間）
-    private func updateWeeklyData() {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        var dailyStats: [WeeklyStatData] = []
-        
-        // 過去7日分のデータを集計
-        for dayOffset in 0..<7 {
-            guard let date = calendar.date(
-                byAdding: .day,
-                value: -dayOffset,
-                to: today
-            ) else { continue }
-            
-            // この日の記録を取得
-            let dayRecords = drinkDataManager.getDrinkRecords(for: date)
-            
-            // 日ごとの集計データ
-            let alcoholGrams = dayRecords.reduce(0) { $0 + $1.pureAlcoholGrams }
-            let spending = dayRecords.reduce(0) { $0 + ($1.price ?? 0) }
-            let count = dayRecords.count
-            
-            // データポイントを作成
-            let dataPoint = WeeklyStatData(
-                dayOfWeek: calendar.component(.weekday, from: date),
-                date: date,
-                alcoholGrams: alcoholGrams,
-                spending: spending,
-                count: count,
-                isAlcoholFreeDay: alcoholGrams == 0
-            )
-            
-            dailyStats.append(dataPoint)
-        }
-        
-        // 日付順にソート
-        weeklyData = dailyStats.sorted(by: { $0.date < $1.date })
+        updateMonthlyData()
     }
     
     // 月間データの更新（現在の月の日ごとのデータ）
@@ -159,24 +57,18 @@ class StatisticsViewModel: ObservableObject {
         let today = Date()
         var monthlyStats: [MonthlyStatData] = []
         
-        // 日数を決定
-        let range: Int
-        let component: Calendar.Component
+        // 選択された月を取得
+        var components = calendar.dateComponents([.year, .month], from: selectedDate)
+        let daysInMonth = calendar.range(of: .day, in: .month, for: selectedDate)?.count ?? 30
         
-        // 現在の月の日数を取得
-        let daysInMonth = calendar.range(of: .day, in: .month, for: today)?.count ?? 30
-        range = daysInMonth
-        component = .day
-        
-        // 現在の月の始まりを取得
-        var components = calendar.dateComponents([.year, .month], from: today)
+        // 月の始まりを取得
         components.day = 1
         guard let startOfMonth = calendar.date(from: components) else { return }
         
         // 日ごとのデータを集計
-        for offset in 0..<range {
+        for offset in 0..<daysInMonth {
             guard let date = calendar.date(
-                byAdding: component,
+                byAdding: .day,
                 value: offset,
                 to: startOfMonth
             ) else { continue }
@@ -209,17 +101,6 @@ class StatisticsViewModel: ObservableObject {
         monthlyData = monthlyStats.sorted(by: { $0.date < $1.date })
     }
     
-    // 時間枠を変更
-    func changeTimeFrame(_ timeFrame: TimeFrame) {
-        selectedTimeFrame = timeFrame
-        updateData()
-    }
-    
-    // データ種類を変更
-    func changeDataType(_ dataType: DataType) {
-        selectedDataType = dataType
-    }
-    
     // 日付を変更
     func changeDate(_ date: Date) {
         selectedDate = date
@@ -228,17 +109,8 @@ class StatisticsViewModel: ObservableObject {
     
     // 統計データ取得
     func getStatistics() -> Statistics? {
-        // 現在選択されている期間の記録を取得
-        let records: [DrinkRecord]
-        
-        switch selectedTimeFrame {
-        case .day:
-            records = drinkDataManager.getDrinkRecords(for: selectedDate)
-        case .week:
-            records = drinkDataManager.getWeeklyRecords(endingAt: selectedDate)
-        case .month:
-            records = drinkDataManager.getMonthlyRecords(containing: selectedDate)
-        }
+        // 現在選択されている月の記録を取得
+        let records = drinkDataManager.getMonthlyRecords(containing: selectedDate)
         
         if records.isEmpty {
             return nil
@@ -275,7 +147,7 @@ class StatisticsViewModel: ObservableObject {
         let maxSpendingDay = records.max(by: { ($0.price ?? 0) < ($1.price ?? 0) })?.date
         
         // 休肝日の数
-        let alcoholFreeDays = calculateAlcoholFreeDays(for: selectedTimeFrame)
+        let alcoholFreeDays = calculateAlcoholFreeDays()
         
         return Statistics(
             totalAlcohol: totalAlcohol,
@@ -289,65 +161,50 @@ class StatisticsViewModel: ObservableObject {
             alcoholFreeDays: alcoholFreeDays
         )
     }
-
+    
     // 平均値の計算（日あたり）
     private func calculateAveragePerDay(_ total: Double) -> Double {
-        let divisor: Double
+        // 月の日数を動的に計算
+        let calendar = Calendar.current
+        let daysInMonth = calendar.range(of: .day, in: .month, for: selectedDate)?.count ?? 30
         
-        switch selectedTimeFrame {
-        case .day:
-            divisor = 1
-        case .week:
-            divisor = 7
-        case .month:
-            // 月の日数を動的に計算
-            let calendar = Calendar.current
-            if let range = calendar.range(of: .day, in: .month, for: selectedDate) {
-                divisor = Double(range.count)
-            } else {
-                divisor = 30 // デフォルト
+        return total / Double(daysInMonth)
+    }
+    
+    // 休肝日の数を計算
+    private func calculateAlcoholFreeDays() -> Int {
+        // 選択した月の全日を調べる
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month], from: selectedDate)
+        let daysInMonth = calendar.range(of: .day, in: .month, for: selectedDate)?.count ?? 30
+        
+        components.day = 1
+        guard let startOfMonth = calendar.date(from: components) else { return 0 }
+        
+        var alcoholFreeDays = 0
+        
+        for offset in 0..<daysInMonth {
+            guard let date = calendar.date(byAdding: .day, value: offset, to: startOfMonth) else { continue }
+            
+            if drinkDataManager.isAlcoholFreeDay(date) {
+                alcoholFreeDays += 1
             }
         }
         
-        return total / divisor
+        return alcoholFreeDays
     }
-
-    // 休肝日の数を計算
-    private func calculateAlcoholFreeDays(for timeFrame: TimeFrame) -> Int {
-        switch timeFrame {
-        case .day:
-            return drinkDataManager.isAlcoholFreeDay(selectedDate) ? 1 : 0
-        case .week:
-            return drinkDataManager.getAlcoholFreeDaysCount(in: .week)
-        case .month:
-            return drinkDataManager.getAlcoholFreeDaysCount(in: .month)
-        }
-    }
-
+    
     // 節約額の計算（予算と比較）
     func calculateSavings() -> Double? {
         guard let budget = weeklyBudget else { return nil }
         
-        let actualSpending: Double
-        switch selectedTimeFrame {
-        case .day:
-            actualSpending = drinkDataManager.getDailyTotalSpending(for: selectedDate)
-            // 日単位の予算（週間予算の1/7）
-            return SavingsCalculator.calculateSavings(budget: budget / 7, actualSpending: actualSpending)
-        case .week:
-            actualSpending = drinkDataManager.getWeeklyTotalSpending(endingAt: selectedDate)
-            return SavingsCalculator.calculateSavings(budget: budget, actualSpending: actualSpending)
-        case .month:
-            actualSpending = drinkDataManager.getMonthlyTotalSpending(containing: selectedDate)
-            // 月単位の予算（週間予算の4.33倍）
-            return SavingsCalculator.calculateSavings(budget: budget * 4.33, actualSpending: actualSpending)
-        }
+        let actualSpending = drinkDataManager.getMonthlyTotalSpending(containing: selectedDate)
+        // 月単位の予算（週間予算の4.33倍）
+        return SavingsCalculator.calculateSavings(budget: budget * 4.33, actualSpending: actualSpending)
     }
     
-    // 時間枠の列挙型 - 修正：yearを削除
+    // 時間枠の列挙型
     enum TimeFrame: String, CaseIterable {
-        case day = "日"
-        case week = "週"
         case month = "月"
     }
     
@@ -378,34 +235,6 @@ class StatisticsViewModel: ObservableObject {
         let alcoholGrams: Double
         let spending: Double
         let count: Int
-    }
-    
-    // 日単位の統計データ
-    struct DailyStatData: Identifiable {
-        let id = UUID()
-        let hour: Int
-        let date: Date
-        let alcoholGrams: Double
-        let spending: Double
-        let count: Int
-    }
-    
-    // 週単位の統計データ
-    struct WeeklyStatData: Identifiable {
-        let id = UUID()
-        let dayOfWeek: Int
-        let date: Date
-        let alcoholGrams: Double
-        let spending: Double
-        let count: Int
-        let isAlcoholFreeDay: Bool
-        
-        // 曜日名を取得
-        var dayName: String {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "E"
-            return formatter.string(from: date)
-        }
     }
     
     // 月単位の統計データ

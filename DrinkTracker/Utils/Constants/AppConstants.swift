@@ -32,6 +32,8 @@ struct AppConstants {
         static let spiritsAlcoholPercentage: Double = 40.0
         static let sakeAlcoholPercentage: Double = 15.0
         static let cocktailAlcoholPercentage: Double = 8.0
+        static let highballAlcoholPercentage: Double = 7.0
+        static let chuhaiAlcoholPercentage: Double = 5.0
         
         // デフォルトの飲酒サイズ（ml）
         static let beerDefaultSize: Double = 350.0
@@ -39,6 +41,8 @@ struct AppConstants {
         static let spiritsDefaultSize: Double = 45.0
         static let sakeDefaultSize: Double = 180.0
         static let cocktailDefaultSize: Double = 250.0
+        static let highballDefaultSize: Double = 350.0
+        static let chuhaiDefaultSize: Double = 350.0
         
         // 健康リスクレベルの基準（1日あたりの純アルコールg）
         static let lowRiskLimit: Double = 20.0

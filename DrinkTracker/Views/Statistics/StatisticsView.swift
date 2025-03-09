@@ -6,6 +6,8 @@ struct StatisticsView: View {
     @State private var selectedDate: Date = Date()
     @State private var showingRecordsList = false
     @State private var drinkToEdit: DrinkRecord? = nil
+    @State private var showingAddDrinkSheet = false
+    @State private var dateForNewDrink: Date = Date()
     
     init(drinkDataManager: DrinkDataManager, userProfileManager: UserProfileManager) {
         _viewModel = StateObject(wrappedValue: StatisticsViewModel(
@@ -17,14 +19,19 @@ struct StatisticsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: AppConstants.UI.standardPadding) {
-                // 期間セレクター
-                TimeFrameSelector(viewModel: viewModel)
+                // 月間ペース分析
+                MonthlyAnalysisView(viewModel: viewModel)
                 
-                // データタイプセレクター
-                DataTypeSelector(viewModel: viewModel)
+                // カレンダー表示
+                CalendarView(viewModel: viewModel, onAddDrink: { date in
+                    dateForNewDrink = date
+                    showingAddDrinkSheet = true
+                })
                 
-                // グラフ表示
-                GraphView(viewModel: viewModel)
+                // 飲酒タイプ内訳
+                if let stats = viewModel.getStatistics(), !stats.drinkTypeBreakdown.isEmpty {
+                    DrinkTypeBreakdownView(breakdown: stats.drinkTypeBreakdown)
+                }
                 
                 // 記録一覧を表示するボタン
                 Button(action: {
@@ -44,24 +51,6 @@ struct StatisticsView: View {
                     )
                 }
                 .padding(.horizontal)
-                
-                // カレンダー（月表示の場合のみ）
-                if viewModel.selectedTimeFrame == .month {
-                    CalendarView(viewModel: viewModel)
-                }
-                
-                // 概要統計
-                StatisticsSummaryView(viewModel: viewModel)
-                
-                // 飲酒タイプ内訳
-                Group {
-                    if let stats = viewModel.getStatistics(), !stats.drinkTypeBreakdown.isEmpty {
-                        DrinkTypeBreakdownView(breakdown: stats.drinkTypeBreakdown)
-                    }
-                }
-                
-                // 詳細データテーブル
-                DetailedDataView(viewModel: viewModel)
             }
             .padding(.horizontal)
         }
@@ -79,187 +68,207 @@ struct StatisticsView: View {
         .sheet(item: $drinkToEdit) { drink in
             DrinkRecordView(drinkDataManager: viewModel.drinkDataManager, existingDrink: drink)
         }
-    }
-}
-
-// 期間セレクター
-struct TimeFrameSelector: View {
-    @ObservedObject var viewModel: StatisticsViewModel
-    
-    var body: some View {
-        HStack {
-            ForEach(StatisticsViewModel.TimeFrame.allCases, id: \.self) { timeFrame in
-                Button(action: {
-                    viewModel.changeTimeFrame(timeFrame)
-                }) {
-                    Text(timeFrame.rawValue)
-                        .font(AppFonts.body)
-                        .foregroundColor(viewModel.selectedTimeFrame == timeFrame ? .white : AppColors.textPrimary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: AppConstants.UI.smallCornerRadius)
-                                .fill(viewModel.selectedTimeFrame == timeFrame ? AppColors.primary : Color.gray.opacity(0.1))
-                        )
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
+        .sheet(isPresented: $showingAddDrinkSheet) {
+            // 選択した日付のドリンク追加画面
+            DrinkRecordView(
+                drinkDataManager: viewModel.drinkDataManager,
+                existingDrink: DrinkRecord(
+                    date: dateForNewDrink,
+                    drinkType: .beer,
+                    volume: 350.0
+                )
+            )
         }
     }
 }
 
-// データタイプセレクター
-struct DataTypeSelector: View {
+// 月間ペース分析ビュー
+struct MonthlyAnalysisView: View {
     @ObservedObject var viewModel: StatisticsViewModel
     
     var body: some View {
-        HStack {
-            ForEach(StatisticsViewModel.DataType.allCases, id: \.self) { dataType in
-                Button(action: {
-                    viewModel.changeDataType(dataType)
-                }) {
-                    Text(dataType.rawValue)
-                        .font(AppFonts.subheadline)
-                        .foregroundColor(viewModel.selectedDataType == dataType ? AppColors.primary : AppColors.textSecondary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(
-                            RoundedRectangle(cornerRadius: AppConstants.UI.smallCornerRadius)
-                                .fill(viewModel.selectedDataType == dataType ? AppColors.primary.opacity(0.1) : Color.clear)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: AppConstants.UI.smallCornerRadius)
-                                .stroke(viewModel.selectedDataType == dataType ? AppColors.primary : Color.gray.opacity(0.3), lineWidth: 1)
-                        )
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-        }
-    }
-}
-
-// 統計概要ビュー
-struct StatisticsSummaryView: View {
-    @ObservedObject var viewModel: StatisticsViewModel
-    
-    var body: some View {
-        if let stats = viewModel.getStatistics() {
-            VStack(alignment: .leading, spacing: AppConstants.UI.smallPadding) {
-                Text("概要")
-                    .font(AppFonts.title3)
-                    .foregroundColor(AppColors.textPrimary)
-                
-                // 主要な統計情報
-                HStack {
-                    // アルコール総量
-                    StatItem(
-                        title: "総アルコール量",
-                        value: "\(Int(stats.totalAlcohol))g",
-                        icon: "drop.fill",
-                        color: AppColors.drinkLevelModerate
-                    )
+        VStack(alignment: .leading, spacing: AppConstants.UI.smallPadding) {
+            Text("今月の飲酒状況")
+                .font(AppFonts.title3)
+                .foregroundColor(AppColors.textPrimary)
+            
+            // 月間摂取量サマリー
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("月間アルコール摂取量")
+                        .font(AppFonts.caption)
+                        .foregroundColor(AppColors.textSecondary)
                     
-                    // 総支出
-                    StatItem(
-                        title: "総支出",
-                        value: "¥\(Int(stats.totalSpending))",
-                        icon: "yensign.circle.fill",
-                        color: AppColors.secondary
-                    )
-                    
-                    // 飲酒回数
-                    StatItem(
-                        title: "飲酒回数",
-                        value: "\(stats.drinkCount)回",
-                        icon: "calendar",
-                        color: AppColors.accent
-                    )
+                    if let stats = viewModel.getStatistics() {
+                        Text("\(Int(stats.totalAlcohol))g")
+                            .font(AppFonts.stats)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        // 月間推奨量との比較
+                        let monthlyLimit = viewModel.dailyLimit * 30
+                        let percentage = (stats.totalAlcohol / monthlyLimit) * 100
+                        
+                        Text("推奨月間摂取量の\(Int(percentage))%")
+                            .font(AppFonts.caption)
+                            .foregroundColor(getColorForPercentage(percentage))
+                    } else {
+                        Text("0g")
+                            .font(AppFonts.stats)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Text("データなし")
+                            .font(AppFonts.caption)
+                            .foregroundColor(AppColors.textTertiary)
+                    }
                 }
                 
-                Divider()
+                Spacer()
                 
-                // 日平均情報
-                HStack {
-                    // 日平均アルコール量
-                    StatItem(
-                        title: "日平均アルコール",
-                        value: "\(Int(stats.averageAlcoholPerDay))g",
-                        icon: "chart.bar.fill",
-                        color: AppColors.primary
-                    )
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("休肝日")
+                        .font(AppFonts.caption)
+                        .foregroundColor(AppColors.textSecondary)
                     
-                    // 日平均支出
-                    StatItem(
-                        title: "日平均支出",
-                        value: "¥\(Int(stats.averageSpendingPerDay))",
-                        icon: "chart.pie.fill",
-                        color: AppColors.primary
-                    )
-                    
-                    // 休肝日
-                    StatItem(
-                        title: "休肝日",
-                        value: "\(stats.alcoholFreeDays)日",
-                        icon: "checkmark.seal.fill",
-                        color: AppColors.success
-                    )
-                }
-                
-                Divider()
-                
-                // 節約額
-                if let savings = viewModel.calculateSavings(), savings > 0 {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("予算内節約額")
+                    if let stats = viewModel.getStatistics() {
+                        Text("\(stats.alcoholFreeDays)日")
+                            .font(AppFonts.stats)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        // 推奨休肝日との比較
+                        let recommendedDays = getDaysInMonth() / 3 // 月間の1/3を休肝日と推奨
+                        if stats.alcoholFreeDays >= recommendedDays {
+                            Text("良好な休肝ペース")
                                 .font(AppFonts.caption)
-                                .foregroundColor(AppColors.textSecondary)
-                            
-                            Text("¥\(Int(savings))")
-                                .font(AppFonts.title3)
                                 .foregroundColor(AppColors.success)
+                        } else {
+                            Text("推奨は月\(Int(recommendedDays))日以上")
+                                .font(AppFonts.caption)
+                                .foregroundColor(AppColors.warning)
                         }
+                    } else {
+                        Text("0日")
+                            .font(AppFonts.stats)
+                            .foregroundColor(AppColors.textPrimary)
                         
-                        Spacer()
-                        
-                        Image(systemName: "leaf.fill")
-                            .foregroundColor(AppColors.success)
-                            .font(.system(size: 24))
+                        Text("データなし")
+                            .font(AppFonts.caption)
+                            .foregroundColor(AppColors.textTertiary)
                     }
                 }
             }
-            .padding()
-            .background(AppColors.cardBackground)
-            .cornerRadius(AppConstants.UI.cornerRadius)
-            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+            .padding(.vertical, 8)
+            
+            // 月間ペース分析
+            if let stats = viewModel.getStatistics() {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("分析")
+                        .font(AppFonts.bodyBold)
+                        .foregroundColor(AppColors.textPrimary)
+                    
+                    // 月間の予測とアドバイス
+                    let monthlyAnalysis = getMonthlyAnalysis(stats: stats)
+                    Text(monthlyAnalysis.message)
+                        .font(AppFonts.body)
+                        .foregroundColor(AppColors.textPrimary)
+                    
+                    if !monthlyAnalysis.advice.isEmpty {
+                        HStack {
+                            Rectangle()
+                                .fill(monthlyAnalysis.color)
+                                .frame(width: 4)
+                                .cornerRadius(2)
+                            
+                            Text(monthlyAnalysis.advice)
+                                .font(AppFonts.bodyItalic)
+                                .foregroundColor(AppColors.textPrimary)
+                        }
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(monthlyAnalysis.color.opacity(0.1))
+                        .cornerRadius(AppConstants.UI.smallCornerRadius)
+                    }
+                }
+                .padding(.top, 8)
+            }
+        }
+        .padding()
+        .background(AppColors.cardBackground)
+        .cornerRadius(AppConstants.UI.cornerRadius)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+    
+    private func getDaysInMonth() -> Int {
+        let calendar = Calendar.current
+        if let range = calendar.range(of: .day, in: .month, for: viewModel.selectedDate) {
+            return range.count
+        }
+        return 30 // 月の日数がわからない場合のデフォルト値
+    }
+    
+    private func getColorForPercentage(_ percentage: Double) -> Color {
+        if percentage <= 70 {
+            return AppColors.drinkLevelSafe
+        } else if percentage <= 100 {
+            return AppColors.drinkLevelModerate
+        } else if percentage <= 150 {
+            return AppColors.drinkLevelRisky
+        } else {
+            return AppColors.drinkLevelHigh
         }
     }
-}
-
-// 統計項目表示用コンポーネント
-struct StatItem: View {
-    let title: String
-    let value: String
-    let icon: String
-    let color: Color
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .foregroundColor(color)
-                    .font(.system(size: 12))
-                
-                Text(title)
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-            }
-            
-            Text(value)
-                .font(AppFonts.title3)
-                .foregroundColor(AppColors.textPrimary)
+    private func getMonthlyAnalysis(stats: StatisticsViewModel.Statistics) -> (message: String, advice: String, color: Color) {
+        let daysInMonth = getDaysInMonth()
+        let elapsedDays = min(Calendar.current.component(.day, from: Date()), daysInMonth)
+        let remainingDays = daysInMonth - elapsedDays
+        
+        // 月の経過割合
+        let monthProgress = Double(elapsedDays) / Double(daysInMonth)
+        
+        // 現在の摂取量と推定最終摂取量
+        let currentAmount = stats.totalAlcohol
+        let projectedAmount = remainingDays > 0 ? currentAmount * (1 + (1 - monthProgress) / monthProgress) : currentAmount
+        
+        // 月間推奨摂取量
+        let monthlyLimit = viewModel.dailyLimit * Double(daysInMonth)
+        
+        // 休肝日分析
+        let currentAlcoholFreeDays = stats.alcoholFreeDays
+        let projectedAlcoholFreeDays = remainingDays > 0 ?
+            Int(Double(currentAlcoholFreeDays) * (1 + (1 - monthProgress) / monthProgress)) : currentAlcoholFreeDays
+        let recommendedAlcoholFreeDays = daysInMonth / 3
+        
+        // メッセージ構築
+        var message = "このペースでは月末時点で約\(Int(projectedAmount))gのアルコールを摂取する見込みです"
+        if projectedAmount > monthlyLimit {
+            let excessPercentage = Int((projectedAmount / monthlyLimit - 1) * 100)
+            message += "（推奨量より\(excessPercentage)%超過）。"
+        } else {
+            let remainingPercentage = Int((1 - projectedAmount / monthlyLimit) * 100)
+            message += "（推奨量より\(remainingPercentage)%余裕あり）。"
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        
+        message += " 休肝日は月間\(projectedAlcoholFreeDays)日になる見込みです。"
+        
+        // アドバイス
+        var advice = ""
+        var color: Color
+        
+        if projectedAmount > monthlyLimit * 1.5 {
+            advice = "摂取量が推奨値を大幅に超えています。週に3〜4日の休肝日を設けることをお勧めします。"
+            color = AppColors.drinkLevelHigh
+        } else if projectedAmount > monthlyLimit {
+            advice = "摂取量が推奨値を超えています。残り\(remainingDays)日の間に\(recommendedAlcoholFreeDays - currentAlcoholFreeDays)日以上の休肝日を設けることをお勧めします。"
+            color = AppColors.drinkLevelRisky
+        } else if projectedAlcoholFreeDays < recommendedAlcoholFreeDays {
+            advice = "アルコール摂取量は良好ですが、健康のために月\(recommendedAlcoholFreeDays)日以上の休肝日を設けることをお勧めします。"
+            color = AppColors.drinkLevelModerate
+        } else {
+            advice = "良好な飲酒習慣です。このペースを維持しましょう。"
+            color = AppColors.drinkLevelSafe
+        }
+        
+        return (message, advice, color)
     }
 }
 
@@ -325,297 +334,7 @@ struct DrinkTypeBreakdownView: View {
     }
 }
 
-// 詳細データテーブルビュー
-struct DetailedDataView: View {
-    @ObservedObject var viewModel: StatisticsViewModel
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppConstants.UI.smallPadding) {
-            Text("詳細データ")
-                .font(AppFonts.title3)
-                .foregroundColor(AppColors.textPrimary)
-            
-            // データテーブルの種類に応じたビューを表示
-            switch viewModel.selectedTimeFrame {
-            case .day:
-                DailyDataTable(data: viewModel.dailyData)
-            case .week:
-                WeeklyDataTable(data: viewModel.weeklyData)
-            case .month:
-                MonthlyDataTable(data: viewModel.monthlyData)
-            }
-        }
-        .padding()
-        .background(AppColors.cardBackground)
-        .cornerRadius(AppConstants.UI.cornerRadius)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-    }
-}
-
-// 日単位のデータテーブル
-struct DailyDataTable: View {
-    let data: [StatisticsViewModel.DailyStatData]
-    
-    var body: some View {
-        if data.isEmpty {
-            Text("データがありません")
-                .font(AppFonts.body)
-                .foregroundColor(AppColors.textSecondary)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding()
-        } else {
-            // テーブルヘッダー
-            HStack {
-                Text("時間")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 60, alignment: .leading)
-                
-                Spacer()
-                
-                Text("アルコール")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 80, alignment: .trailing)
-                
-                Text("支出")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 80, alignment: .trailing)
-                
-                Text("回数")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 50, alignment: .trailing)
-            }
-            .padding(.bottom, 4)
-            
-            Divider()
-            
-            // データ行
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(data.sorted(by: { $0.hour < $1.hour })) { item in
-                        HStack {
-                            // 時間
-                            Text("\(item.hour):00")
-                                .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
-                                .frame(width: 60, alignment: .leading)
-                            
-                            Spacer()
-                            
-                            // アルコール量
-                            Text("\(String(format: "%.1f", item.alcoholGrams))g")
-                                .font(AppFonts.body)
-                                .foregroundColor(item.alcoholGrams > 0 ? AppColors.textPrimary : AppColors.textTertiary)
-                                .frame(width: 80, alignment: .trailing)
-                            
-                            // 支出
-                            Text("¥\(Int(item.spending))")
-                                .font(AppFonts.body)
-                                .foregroundColor(item.spending > 0 ? AppColors.textPrimary : AppColors.textTertiary)
-                                .frame(width: 80, alignment: .trailing)
-                            
-                            // 回数
-                            Text("\(item.count)")
-                                .font(AppFonts.body)
-                                .foregroundColor(item.count > 0 ? AppColors.textPrimary : AppColors.textTertiary)
-                                .frame(width: 50, alignment: .trailing)
-                        }
-                        .padding(.vertical, 8)
-                        .background(item.hour % 2 == 0 ? Color.gray.opacity(0.05) : Color.clear)
-                        
-                        Divider()
-                    }
-                }
-            }
-            .frame(height: 300)
-        }
-    }
-}
-
-// 週単位のデータテーブル
-struct WeeklyDataTable: View {
-    let data: [StatisticsViewModel.WeeklyStatData]
-    
-    var body: some View {
-        if data.isEmpty {
-            Text("データがありません")
-                .font(AppFonts.body)
-                .foregroundColor(AppColors.textSecondary)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding()
-        } else {
-            // テーブルヘッダー
-            HStack {
-                Text("曜日")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 60, alignment: .leading)
-                
-                Spacer()
-                
-                Text("アルコール")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 80, alignment: .trailing)
-                
-                Text("支出")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 80, alignment: .trailing)
-                
-                Text("回数")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 50, alignment: .trailing)
-            }
-            .padding(.bottom, 4)
-            
-            Divider()
-            
-            // データ行
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(data) { item in
-                        HStack {
-                            // 曜日
-                            Text(item.dayName)
-                                .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
-                                .frame(width: 60, alignment: .leading)
-                            
-                            Spacer()
-                            
-                            // アルコール量
-                            HStack(spacing: 4) {
-                                if item.isAlcoholFreeDay {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(AppColors.success)
-                                        .font(.system(size: 12))
-                                }
-                                
-                                Text("\(String(format: "%.1f", item.alcoholGrams))g")
-                                    .font(AppFonts.body)
-                                    .foregroundColor(AppColors.textPrimary)
-                            }
-                            .frame(width: 80, alignment: .trailing)
-                            
-                            // 支出
-                            Text("¥\(Int(item.spending))")
-                                .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
-                                .frame(width: 80, alignment: .trailing)
-                            
-                            // 回数
-                            Text("\(item.count)")
-                                .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
-                                .frame(width: 50, alignment: .trailing)
-                        }
-                        .padding(.vertical, 8)
-                        
-                        Divider()
-                    }
-                }
-            }
-            .frame(height: 200)
-        }
-    }
-}
-
-// 月単位のデータテーブル
-struct MonthlyDataTable: View {
-    let data: [StatisticsViewModel.MonthlyStatData]
-    
-    var body: some View {
-        if data.isEmpty {
-            Text("データがありません")
-                .font(AppFonts.body)
-                .foregroundColor(AppColors.textSecondary)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding()
-        } else {
-            // テーブルヘッダー
-            HStack {
-                Text("日付")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 60, alignment: .leading)
-                
-                Spacer()
-                
-                Text("アルコール")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 80, alignment: .trailing)
-                
-                Text("支出")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 80, alignment: .trailing)
-                
-                Text("回数")
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textSecondary)
-                    .frame(width: 50, alignment: .trailing)
-            }
-            .padding(.bottom, 4)
-            
-            Divider()
-            
-            // データ行
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(data) { item in
-                        HStack {
-                            // 日付
-                            Text("\(item.day)日")
-                                .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
-                                .frame(width: 60, alignment: .leading)
-                            
-                            Spacer()
-                            
-                            // アルコール量
-                            HStack(spacing: 4) {
-                                if item.isAlcoholFreeDay {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(AppColors.success)
-                                        .font(.system(size: 12))
-                                }
-                                
-                                Text("\(String(format: "%.1f", item.alcoholGrams))g")
-                                    .font(AppFonts.body)
-                                    .foregroundColor(AppColors.textPrimary)
-                            }
-                            .frame(width: 80, alignment: .trailing)
-                            
-                            // 支出
-                            Text("¥\(Int(item.spending))")
-                                .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
-                                .frame(width: 80, alignment: .trailing)
-                            
-                            // 回数
-                            Text("\(item.count)")
-                                .font(AppFonts.body)
-                                .foregroundColor(AppColors.textPrimary)
-                                .frame(width: 50, alignment: .trailing)
-                        }
-                        .padding(.vertical, 8)
-                        
-                        Divider()
-                    }
-                }
-            }
-            .frame(height: 300)
-        }
-    }
-}
-
-// RecordsListView - 既存のファイルに追加
+// 記録一覧を表示するビュー
 struct RecordsListView: View {
     let drinkDataManager: DrinkDataManager
     let selectedTimeFrame: StatisticsViewModel.TimeFrame
@@ -625,34 +344,13 @@ struct RecordsListView: View {
     @State private var recordsByDate: [Date: [DrinkRecord]] = [:]
     
     private var records: [DrinkRecord] {
-        switch selectedTimeFrame {
-        case .day:
-            return drinkDataManager.getDrinkRecords(for: selectedDate)
-        case .week:
-            return drinkDataManager.getWeeklyRecords(endingAt: selectedDate)
-        case .month:
-            return drinkDataManager.getMonthlyRecords(containing: selectedDate)
-        }
+        return drinkDataManager.getMonthlyRecords(containing: selectedDate)
     }
     
     private var timeFrameText: String {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy年M月d日"
-        
-        switch selectedTimeFrame {
-        case .day:
-            return dateFormatter.string(from: selectedDate)
-        case .week:
-            let calendar = Calendar.current
-            guard let startDate = calendar.date(byAdding: .day, value: -6, to: selectedDate) else {
-                return "週間データ"
-            }
-            dateFormatter.dateFormat = "M月d日"
-            return "\(dateFormatter.string(from: startDate))〜\(dateFormatter.string(from: selectedDate))"
-        case .month:
-            dateFormatter.dateFormat = "yyyy年M月"
-            return dateFormatter.string(from: selectedDate)
-        }
+        dateFormatter.dateFormat = "yyyy年M月"
+        return dateFormatter.string(from: selectedDate)
     }
     
     var body: some View {
@@ -722,14 +420,5 @@ struct RecordsListView: View {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy年M月d日 (E)"
         return dateFormatter.string(from: date)
-    }
-    
-    private func deleteDrink(at offsets: IndexSet) {
-        offsets.forEach { index in
-            let drink = records[index]
-            drinkDataManager.deleteDrinkRecord(drink.id)
-        }
-        // 削除後にデータを再グループ化
-        groupRecordsByDate()
     }
 }

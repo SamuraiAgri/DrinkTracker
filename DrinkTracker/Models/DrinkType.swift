@@ -7,6 +7,8 @@ enum DrinkType: String, CaseIterable, Codable, Identifiable {
     case spirits = "蒸留酒"
     case sake = "日本酒"
     case cocktail = "カクテル"
+    case highball = "ハイボール"
+    case chuhai = "酎ハイ"
     case other = "その他"
     
     var id: String { self.rawValue }
@@ -23,6 +25,10 @@ enum DrinkType: String, CaseIterable, Codable, Identifiable {
             return AppConstants.Drinking.sakeAlcoholPercentage
         case .cocktail:
             return AppConstants.Drinking.cocktailAlcoholPercentage
+        case .highball:
+            return AppConstants.Drinking.highballAlcoholPercentage
+        case .chuhai:
+            return AppConstants.Drinking.chuhaiAlcoholPercentage
         case .other:
             return 5.0
         }
@@ -40,6 +46,10 @@ enum DrinkType: String, CaseIterable, Codable, Identifiable {
             return AppConstants.Drinking.sakeDefaultSize
         case .cocktail:
             return AppConstants.Drinking.cocktailDefaultSize
+        case .highball:
+            return AppConstants.Drinking.highballDefaultSize
+        case .chuhai:
+            return AppConstants.Drinking.chuhaiDefaultSize
         case .other:
             return 250.0
         }
@@ -57,6 +67,10 @@ enum DrinkType: String, CaseIterable, Codable, Identifiable {
             return AppColors.sakeColor
         case .cocktail:
             return AppColors.cocktailColor
+        case .highball:
+            return AppColors.highballColor
+        case .chuhai:
+            return AppColors.chuhaiColor
         case .other:
             return AppColors.secondary
         }
@@ -74,6 +88,10 @@ enum DrinkType: String, CaseIterable, Codable, Identifiable {
             return "sake"
         case .cocktail:
             return "cocktail"
+        case .highball:
+            return "highball"
+        case .chuhai:
+            return "chuhai"
         case .other:
             return "other"
         }
@@ -90,7 +108,11 @@ enum DrinkType: String, CaseIterable, Codable, Identifiable {
         case .sake:
             return "日本酒、純米酒、本醸造酒、吟醸酒など"
         case .cocktail:
-            return "カクテル、サワー、ハイボール、チューハイなど"
+            return "モヒート、マティーニ、マルガリータなど"
+        case .highball:
+            return "ウイスキーベースの炭酸割り飲料"
+        case .chuhai:
+            return "焼酎ベースの炭酸割り飲料、缶チューハイなど"
         case .other:
             return "その他のアルコール飲料"
         }
@@ -109,6 +131,10 @@ enum DrinkType: String, CaseIterable, Codable, Identifiable {
             return "酒"
         case .cocktail:
             return "カクテル"
+        case .highball:
+            return "ハイボール"
+        case .chuhai:
+            return "酎ハイ"
         case .other:
             return "その他"
         }

@@ -34,4 +34,6 @@ struct AppColors {
     static let spiritsColor = Color.brown // 蒸留酒（琥珀色）
     static let cocktailColor = Color.blue // カクテル（水色）
     static let sakeColor = Color(UIColor.systemYellow).opacity(0.7) // 日本酒（淡い黄色）
+    static let highballColor = Color.orange // ハイボール（オレンジ色）
+    static let chuhaiColor = Color.pink // 酎ハイ（ピンク色）
 }

@@ -73,7 +73,7 @@ class DrinkRecordViewModel: ObservableObject {
         favoritePresets = drinkDataManager.drinkRecords.filter { $0.isFavorite }
     }
     
-    // 次のステップに進む - 修正箇所
+    // 次のステップに進む
     func nextStep() {
         print("Current step: \(currentStep)")  // デバッグ出力
         
@@ -196,6 +196,10 @@ class DrinkRecordViewModel: ObservableObject {
             return [90, 180, 270]
         case .cocktail:
             return [200, 250, 300, 350]
+        case .highball:
+            return [250, 350, 500, 630]
+        case .chuhai:
+            return [250, 350, 500, 630]
         case .other:
             return [200, 250, 300, 350]
         }
@@ -214,6 +218,10 @@ class DrinkRecordViewModel: ObservableObject {
             return [13.0, 14.0, 15.0, 16.0, 17.0]
         case .cocktail:
             return [4.0, 6.0, 8.0, 10.0, 12.0, 15.0]
+        case .highball:
+            return [5.0, 7.0, 9.0, 12.0]
+        case .chuhai:
+            return [3.0, 4.0, 5.0, 6.0, 7.0, 9.0]
         case .other:
             return [3.0, 5.0, 8.0, 12.0, 15.0, 20.0, 30.0, 40.0]
         }
