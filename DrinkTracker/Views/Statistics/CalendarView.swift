@@ -239,36 +239,39 @@ struct CalendarDayView: View {
                 
                 // アルコール情報表示（現在の月の日付のみ）
                 if isCurrentMonth {
-                    let dayRecords = viewModel.drinkDataManager.getDrinkRecords(for: day)
-                    
-                    // 飲酒記録がある場合
-                    if !dayRecords.isEmpty {
-                        let totalAlcohol = dayRecords.reduce(0) { $0 + $1.pureAlcoholGrams }
+                    // 今日までの日付のみ表示
+                    if day <= Date() {
+                        let dayRecords = viewModel.drinkDataManager.getDrinkRecords(for: day)
                         
-                        // 絵文字を表示
-                        Text(getAlcoholEmoji(totalAlcohol))
-                            .font(.system(size: 16))
-                            .padding(.top, 2)
-                            .overlay(
-                                isSelectedDay ? nil :
-                                    ZStack {
-                                        Text("\(Int(totalAlcohol))g")
-                                            .font(.system(size: 8))
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 2)
-                                            .background(
-                                                Capsule()
-                                                    .fill(getColorForAmount(totalAlcohol))
-                                            )
-                                    }
-                                    .offset(y: 10)
-                            )
-                    }
-                    // 飲酒記録がない場合（休肝日）
-                    else if viewModel.drinkDataManager.isAlcoholFreeDay(day) {
-                        Text("🌱")
-                            .font(.system(size: 14))
-                            .padding(.top, 2)
+                        // 飲酒記録がある場合
+                        if !dayRecords.isEmpty {
+                            let totalAlcohol = dayRecords.reduce(0) { $0 + $1.pureAlcoholGrams }
+                            
+                            // 絵文字を表示
+                            Text(getAlcoholEmoji(totalAlcohol))
+                                .font(.system(size: 16))
+                                .padding(.top, 2)
+                                .overlay(
+                                    isSelectedDay ? nil :
+                                        ZStack {
+                                            Text("\(Int(totalAlcohol))g")
+                                                .font(.system(size: 8))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 2)
+                                                .background(
+                                                    Capsule()
+                                                        .fill(getColorForAmount(totalAlcohol))
+                                                )
+                                        }
+                                        .offset(y: 10)
+                                )
+                        }
+                        // 飲酒記録がない場合（休肝日）
+                        else if viewModel.drinkDataManager.isAlcoholFreeDay(day) {
+                            Text("🌱")
+                                .font(.system(size: 14))
+                                .padding(.top, 2)
+                        }
                     }
                 }
             }
