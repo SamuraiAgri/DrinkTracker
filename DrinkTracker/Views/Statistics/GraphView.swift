@@ -105,9 +105,7 @@ struct DailyGraphView: View {
                         
                         Spacer()
                         
-                        let formatter = DateFormatter()
-                        formatter.dateFormat = "yyyy年M月d日"
-                        Text(formatter.string(from: viewModel.selectedDate))
+                        Text(formatDate(viewModel.selectedDate))
                             .font(AppFonts.caption)
                             .foregroundColor(AppColors.textSecondary)
                     }
@@ -177,9 +175,13 @@ struct DailyGraphView: View {
                         
                         // 推奨限度量ライン（アルコール表示の場合のみ）
                         if viewModel.selectedDataType == .alcohol {
-                            GeometryReader { geometry in
-                                let maxBarHeight: CGFloat = 200
-                                let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
+                            let maxBarHeight: CGFloat = 200
+                            let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
+                            
+                            ZStack(alignment: .topLeading) {
+                                Rectangle()
+                                    .fill(Color.clear)
+                                    .frame(height: 200)
                                 
                                 HStack {
                                     // 左側のラベル
@@ -199,7 +201,6 @@ struct DailyGraphView: View {
                                 }
                                 .offset(y: maxBarHeight - limitLineHeight)
                             }
-                            .frame(height: 200)
                         }
                     }
                 }
@@ -450,9 +451,13 @@ struct WeeklyGraphView: View {
                         
                         // 推奨限度量ライン（アルコール表示の場合のみ）
                         if viewModel.selectedDataType == .alcohol {
-                            GeometryReader { geometry in
-                                let maxBarHeight: CGFloat = 180
-                                let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
+                            let maxBarHeight: CGFloat = 180
+                            let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
+                            
+                            ZStack(alignment: .topLeading) {
+                                Rectangle()
+                                    .fill(Color.clear)
+                                    .frame(height: 200)
                                 
                                 HStack {
                                     // 左側のラベル
@@ -472,7 +477,6 @@ struct WeeklyGraphView: View {
                                 }
                                 .offset(y: maxBarHeight - limitLineHeight)
                             }
-                            .frame(height: 200)
                         }
                     }
                 }
@@ -624,16 +628,13 @@ struct MonthlyGraphView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     // グラフタイトルと月表示
                     HStack {
-                        Text("日別データ")
+                        Text("時間帯別データ")
                             .font(AppFonts.bodyBold)
                             .foregroundColor(AppColors.textPrimary)
                         
                         Spacer()
                         
-                        // 月表示
-                        let formatter = DateFormatter()
-                        formatter.dateFormat = "yyyy年M月"
-                        Text(formatter.string(from: viewModel.selectedDate))
+                        Text(formatDate(viewModel.selectedDate))
                             .font(AppFonts.caption)
                             .foregroundColor(AppColors.textSecondary)
                     }
@@ -721,7 +722,7 @@ struct MonthlyGraphView: View {
                                                 .fontWeight(isToday(dayData.date) ? .bold : .regular)
                                                 .foregroundColor(
                                                     isToday(dayData.date) ? AppColors.primary :
-                                                    (isWeekend(dayData.date) ? AppColors.error : AppColors.textPrimary)
+                                                        (isWeekend(dayData.date) ? AppColors.error : AppColors.textPrimary)
                                                 )
                                                 .frame(height: 20)
                                         } else {
@@ -738,9 +739,10 @@ struct MonthlyGraphView: View {
                             
                             // 推奨限度量ライン（アルコール表示の場合のみ）
                             if viewModel.selectedDataType == .alcohol {
-                                GeometryReader { geometry in
-                                    let maxBarHeight: CGFloat = 180
-                                    let limitLineHeight = getLimitLineHeight(maxHeight: maxBarHeight)
+                                ZStack(alignment: .topLeading) {
+                                    Rectangle()
+                                        .fill(Color.clear)
+                                        .frame(height: 200)
                                     
                                     HStack {
                                         // 左側のラベル
@@ -758,9 +760,8 @@ struct MonthlyGraphView: View {
                                             .frame(height: 2)
                                             .padding(.leading, 4)
                                     }
-                                    .offset(y: maxBarHeight - limitLineHeight)
+                                    .offset(y: 180 - getLimitLineHeight(maxHeight: 180))
                                 }
-                                .frame(height: 200)
                             }
                         }
                         // グラフの幅を十分に確保（日数×バー幅）
@@ -783,6 +784,12 @@ struct MonthlyGraphView: View {
     
     private var calendar: Calendar {
         return Calendar.current
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy年M月d日"
+        return formatter.string(from: date)
     }
     
     // 今日かどうかを判定
