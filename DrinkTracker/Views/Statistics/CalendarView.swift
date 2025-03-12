@@ -6,6 +6,9 @@ struct CalendarView: View {
     @State private var showingDayEditor: Bool = false
     var onAddDrink: (Date) -> Void
     
+    // スワイプ検出用
+    @GestureState private var dragOffset: CGFloat = 0
+    
     var body: some View {
         VStack(spacing: AppConstants.UI.smallPadding) {
             // Month selector
@@ -20,40 +23,53 @@ struct CalendarView: View {
             DaysOfWeekHeaderView()
             
             // Calendar grid
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                ForEach(getDaysInMonth(), id: \.self) { day in
-                    CalendarDayView(
-                        day: day,
-                        selectedDate: $selectedDate,
-                        viewModel: viewModel,
-                        onDateSelected: { date in
-                            viewModel.changeDate(date)
-                            selectedDate = date
-                            // 日付がタップされたら編集モードを表示
-                            showingDayEditor = true
-                        }
-                    )
+            ScrollView {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+                    ForEach(getDaysInMonth(), id: \.self) { day in
+                        CalendarDayView(
+                            day: day,
+                            selectedDate: $selectedDate,
+                            viewModel: viewModel,
+                            onDateSelected: { date in
+                                viewModel.changeDate(date)
+                                selectedDate = date
+                                // 日付がタップされたら編集モードを表示
+                                showingDayEditor = true
+                            }
+                        )
+                    }
                 }
+                .gesture(
+                    DragGesture()
+                        .updating($dragOffset, body: { value, state, _ in
+                            state = value.translation.width
+                        })
+                        .onEnded({ value in
+                            // スワイプの方向と距離に基づいて月を変更
+                            let threshold: CGFloat = 50
+                            if value.translation.width > threshold {
+                                // 右スワイプ - 前月
+                                if let newDate = Calendar.current.date(byAdding: .month, value: -1, to: selectedDate) {
+                                    selectedDate = newDate
+                                    viewModel.changeDate(newDate)
+                                }
+                            } else if value.translation.width < -threshold {
+                                // 左スワイプ - 翌月
+                                if let newDate = Calendar.current.date(byAdding: .month, value: 1, to: selectedDate) {
+                                    selectedDate = newDate
+                                    viewModel.changeDate(newDate)
+                                }
+                            }
+                        })
+                )
             }
             
-            // 休肝日・アルコール摂取量の凡例
+            // アルコール摂取量の凡例
             HStack(spacing: 16) {
-                // 休肝日の凡例
-                HStack(spacing: 4) {
-                    Text("🌱")
-                        .font(.system(size: 14))
-                    Text("休肝日")
-                        .font(AppFonts.caption)
-                        .foregroundColor(AppColors.textSecondary)
-                }
-                
-                // アルコール摂取量の凡例
-                Group {
-                    alcoholLegendItem(emoji: "😊", text: "安全範囲") // 適量以下
-                    alcoholLegendItem(emoji: "😐", text: "適度") // 適量〜限度内
-                    alcoholLegendItem(emoji: "😓", text: "注意") // 限度超え
-                    alcoholLegendItem(emoji: "🥵", text: "過剰") // 限度の1.5倍超え
-                }
+                alcoholLegendItem(color: AppColors.drinkLevelSafe, text: "安全範囲")
+                alcoholLegendItem(color: AppColors.drinkLevelModerate, text: "適度")
+                alcoholLegendItem(color: AppColors.drinkLevelRisky, text: "注意")
+                alcoholLegendItem(color: AppColors.drinkLevelHigh, text: "過剰")
             }
             .padding(.top, 8)
             .padding(.horizontal)
@@ -76,10 +92,11 @@ struct CalendarView: View {
     }
     
     // 凡例アイテム
-    private func alcoholLegendItem(emoji: String, text: String) -> some View {
+    private func alcoholLegendItem(color: Color, text: String) -> some View {
         HStack(spacing: 4) {
-            Text(emoji)
-                .font(.system(size: 14))
+            Circle()
+                .fill(color)
+                .frame(width: 12, height: 12)
             Text(text)
                 .font(AppFonts.caption)
                 .foregroundColor(AppColors.textSecondary)
@@ -220,7 +237,7 @@ struct CalendarDayView: View {
             selectedDate = day
             onDateSelected(day)
         }) {
-            VStack(spacing: 1) {
+            VStack(spacing: 2) {
                 // 日付表示
                 ZStack {
                     // 選択状態や今日を示す円
@@ -239,7 +256,7 @@ struct CalendarDayView: View {
                         )
                 }
                 
-                // アルコール情報表示（現在の月の日付のみ、過去の日付制限を解除）
+                // アルコール情報表示（現在の月の日付のみ）
                 if isCurrentMonth {
                     let dayRecords = viewModel.drinkDataManager.getDrinkRecords(for: day)
                     
@@ -247,31 +264,27 @@ struct CalendarDayView: View {
                     if !dayRecords.isEmpty {
                         let totalAlcohol = dayRecords.reduce(0) { $0 + $1.pureAlcoholGrams }
                         
-                        // 絵文字を表示
-                        Text(getAlcoholEmoji(totalAlcohol))
-                            .font(.system(size: 16))
-                            .padding(.top, 2)
-                            .overlay(
-                                isSelectedDay ? nil :
-                                    ZStack {
-                                        Text("\(Int(totalAlcohol))g")
-                                            .font(.system(size: 8))
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 2)
-                                            .background(
-                                                Capsule()
-                                                    .fill(getColorForAmount(totalAlcohol))
-                                            )
-                                    }
-                                    .offset(y: 10)
+                        // アルコール量インジケータ（数値のみ）
+                        Text("\(Int(totalAlcohol))g")
+                            .font(.system(size: 12))
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                            .background(
+                                Capsule()
+                                    .fill(getColorForAmount(totalAlcohol))
                             )
+                            .frame(height: 26)
+                    } else {
+                        // 空のスペースで高さを確保（レイアウト崩れ防止）
+                        Spacer()
+                            .frame(height: 26)
                     }
-                    // 飲酒記録がない場合（休肝日）
-                    else if viewModel.drinkDataManager.isAlcoholFreeDay(day) {
-                        Text("🌱")
-                            .font(.system(size: 14))
-                            .padding(.top, 2)
-                    }
+                } else {
+                    // 今月以外の日付は空のスペースで高さを確保
+                    Spacer()
+                        .frame(height: 26)
                 }
             }
             .frame(height: 56) // セルの高さを固定
@@ -281,27 +294,6 @@ struct CalendarDayView: View {
             .cornerRadius(8)
         }
         .buttonStyle(PlainButtonStyle())
-    }
-    
-    // アルコール量に応じた絵文字を取得
-    private func getAlcoholEmoji(_ amount: Double) -> String {
-        let limit = viewModel.dailyLimit
-        
-        if amount == 0 {
-            return "🌱" // 休肝日
-        } else if amount <= limit * 0.5 {
-            return "😊" // 安全範囲
-        } else if amount <= limit * 0.8 {
-            return "🙂" // やや適量
-        } else if amount <= limit {
-            return "😐" // 適量上限
-        } else if amount <= limit * 1.5 {
-            return "😓" // 注意
-        } else if amount <= limit * 2.0 {
-            return "🥵" // 過剰
-        } else {
-            return "🤢" // 危険
-        }
     }
     
     // アルコール量に応じた色を取得
@@ -326,7 +318,7 @@ struct CalendarDayView: View {
     }
 }
 
-// 日付別の記録編集ビュー（onAddDrinkを追加）
+// 日付別の記録編集ビュー
 struct DayRecordsEditView: View {
     let date: Date
     let records: [DrinkRecord]
@@ -358,7 +350,6 @@ struct DayRecordsEditView: View {
                             }
                         } else {
                             HStack {
-                                Text("🌱")
                                 Text("休肝日")
                                     .font(AppFonts.caption)
                                     .foregroundColor(AppColors.success)
@@ -478,13 +469,15 @@ struct DayRecordsEditView: View {
             return AppColors.drinkLevelSafe
         } else if amount <= 40 {
             return AppColors.drinkLevelModerate
-        } else {
+        } else if amount <= 60 {
             return AppColors.drinkLevelRisky
+        } else {
+            return AppColors.drinkLevelHigh
         }
     }
 }
 
-// 強化版ドリンクリストアイテムビュー（より詳細な情報表示）
+// 強化版ドリンクリストアイテムビュー
 struct EnhancedDrinkListItemView: View {
     let drink: DrinkRecord
     
@@ -540,14 +533,9 @@ struct EnhancedDrinkListItemView: View {
             
             // アルコール量と価格
             VStack(alignment: .trailing, spacing: 4) {
-                HStack(spacing: 2) {
-                    Text("\(String(format: "%.1f", drink.pureAlcoholGrams))g")
-                        .font(AppFonts.body)
-                        .foregroundColor(getColorForAmount(drink.pureAlcoholGrams))
-                    
-                    Text(getAlcoholEmoji(drink.pureAlcoholGrams))
-                        .font(.system(size: 16))
-                }
+                Text("\(String(format: "%.1f", drink.pureAlcoholGrams))g")
+                    .font(AppFonts.body)
+                    .foregroundColor(getColorForAmount(drink.pureAlcoholGrams))
                 
                 if let price = drink.price {
                     Text("¥\(Int(price))")
@@ -572,27 +560,6 @@ struct EnhancedDrinkListItemView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
         return formatter.string(from: date)
-    }
-    
-    // アルコール量に応じた絵文字を取得
-    private func getAlcoholEmoji(_ amount: Double) -> String {
-        let limit: Double = 20.0 // 一般的な推奨限度量
-        
-        if amount == 0 {
-            return "🌱" // 休肝日
-        } else if amount <= limit * 0.5 {
-            return "😊" // 安全範囲
-        } else if amount <= limit * 0.8 {
-            return "🙂" // やや適量
-        } else if amount <= limit {
-            return "😐" // 適量上限
-        } else if amount <= limit * 1.5 {
-            return "😓" // 注意
-        } else if amount <= limit * 2.0 {
-            return "🥵" // 過剰
-        } else {
-            return "🤢" // 危険
-        }
     }
     
     // アルコール量に応じた色を取得

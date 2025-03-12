@@ -38,7 +38,7 @@ struct ContentView: View {
                 .tag(Tab.stats)
                 .tabItem {
                     Image(systemName: "chart.bar.fill")
-                    Text("統計")
+                    Text("記録")
                 }
                 
                 // 健康画面

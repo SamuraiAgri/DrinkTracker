@@ -54,7 +54,7 @@ struct StatisticsView: View {
             }
             .padding(.horizontal)
         }
-        .navigationTitle("統計")
+        .navigationTitle("記録")
         .onAppear {
             viewModel.updateData()
         }
