@@ -4,6 +4,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var userProfileManager: UserProfileManager
     @EnvironmentObject var drinkDataManager: DrinkDataManager
+    @EnvironmentObject var drinkPresetManager: DrinkPresetManager
     @State private var selectedTab: Tab = .home
     @State private var showingAddDrinkSheet = false
     
@@ -21,6 +22,7 @@ struct ContentView: View {
                         drinkDataManager: drinkDataManager,
                         userProfileManager: userProfileManager
                     )
+                    .environmentObject(drinkPresetManager)
                 }
                 .tag(Tab.home)
                 .tabItem {

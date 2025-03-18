@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject var viewModel: HomeViewModel
+    @EnvironmentObject var drinkPresetManager: DrinkPresetManager
     @State private var showingAddDrinkSheet = false
     
     init(drinkDataManager: DrinkDataManager, userProfileManager: UserProfileManager) {
@@ -20,8 +21,8 @@ struct HomeView: View {
                 // 今日の飲酒サマリー
                 DrinkSummaryView(viewModel: viewModel)
                 
-                // クイック追加ボタン
-                QuickAddView(viewModel: viewModel)
+                // クイック追加ボタン - ここだけ更新
+                QuickAddView(viewModel: viewModel, presetManager: drinkPresetManager)
                 
                 // 週間サマリー
                 WeeklySummaryView(viewModel: viewModel)
@@ -359,19 +360,5 @@ struct HealthAdviceView: View {
         .background(AppColors.cardBackground)
         .cornerRadius(AppConstants.UI.cornerRadius)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-    }
-}
-
-struct HomeView_Previews: PreviewProvider {
-    static var previews: some View {
-        let drinkDataManager = DrinkDataManager()
-        let userProfileManager = UserProfileManager()
-        
-        return NavigationView {
-            HomeView(
-                drinkDataManager: drinkDataManager,
-                userProfileManager: userProfileManager
-            )
-        }
     }
 }
