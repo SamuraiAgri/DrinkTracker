@@ -128,14 +128,14 @@ struct QuickAddView: View {
         // プリセットの情報を使用して新しいレコードを作成
         let drinkRecord = preset.toDrinkRecord(date: time)
         
-        viewModel.drinkDataManager.addDrink(drinkRecord)
+        viewModel.drinkDataManager.addDrinkRecord(drinkRecord)
         viewModel.updateDisplayData()
     }
     
     // プリセットから即座に飲み物を追加
     private func addDrinkFromPreset(_ preset: DrinkPreset, time: Date) {
         let drinkRecord = preset.toDrinkRecord(date: time)
-        viewModel.drinkDataManager.addDrink(drinkRecord)
+        viewModel.drinkDataManager.addDrinkRecord(drinkRecord)
         viewModel.updateDisplayData()
         
         // ハプティックフィードバック
