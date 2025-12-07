@@ -1,6 +1,7 @@
 // DrinkTracker/ViewModels/HomeViewModel.swift
 import Foundation
 import Combine
+import UIKit
 
 class HomeViewModel: ObservableObject {
     // 表示データ
