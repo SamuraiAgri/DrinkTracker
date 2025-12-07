@@ -19,6 +19,9 @@ struct StatisticsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: AppConstants.UI.standardPadding) {
+                // 週間グラフ
+                WeeklyAlcoholChartView(data: viewModel.getWeeklyChartData())
+                
                 // 月間ペース分析
                 MonthlyAnalysisView(viewModel: viewModel)
                 

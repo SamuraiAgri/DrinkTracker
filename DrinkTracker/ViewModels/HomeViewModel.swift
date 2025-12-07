@@ -135,6 +135,10 @@ class HomeViewModel: ObservableObject {
     }
     
     func deleteDrink(_ id: UUID) {
+        // ハプティックフィードバック
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+        
         drinkDataManager.deleteDrinkRecord(id)
         updateDisplayData()
     }

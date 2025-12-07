@@ -8,6 +8,8 @@ struct QuickAddView: View {
     @State private var showingPresetManagement = false
     @State private var selectedPreset: DrinkPreset? = nil
     @State private var selectedTime: Date = Date()
+    @State private var showToast = false
+    @State private var toastMessage = ""
     
     var body: some View {
         VStack(spacing: AppConstants.UI.smallPadding) {
@@ -40,6 +42,10 @@ struct QuickAddView: View {
                             PresetQuickAddButton(
                                 preset: preset,
                                 action: {
+                                    // 長押しで時間選択、通常タップで即座に記録
+                                    addDrinkFromPreset(preset, time: Date())
+                                },
+                                onLongPress: {
                                     selectedPreset = preset
                                     selectedTime = Date()
                                     showingTimePickerSheet = true
@@ -65,9 +71,7 @@ struct QuickAddView: View {
                                 volume: 350.0,
                                 alcoholPercentage: 5.0
                             )
-                            selectedPreset = defaultPreset
-                            selectedTime = Date()
-                            showingTimePickerSheet = true
+                            addDrinkFromPreset(defaultPreset, time: Date())
                         }
                     )
                     
@@ -81,9 +85,7 @@ struct QuickAddView: View {
                                 volume: 150.0,
                                 alcoholPercentage: 12.0
                             )
-                            selectedPreset = defaultPreset
-                            selectedTime = Date()
-                            showingTimePickerSheet = true
+                            addDrinkFromPreset(defaultPreset, time: Date())
                         }
                     )
                     
@@ -117,14 +119,45 @@ struct QuickAddView: View {
         .sheet(isPresented: $showingPresetManagement) {
             PresetManagementView(presetManager: presetManager)
         }
+        .toast(isShowing: $showToast, message: toastMessage, icon: "checkmark.circle.fill", backgroundColor: AppColors.primary)
     }
     
     // プリセットから飲み物を追加（時間指定あり）
     private func addPresetWithTime(_ preset: DrinkPreset, _ time: Date) {
         // プリセットの情報を使用して新しいレコードを作成
-        var drinkRecord = preset.toDrinkRecord(date: time)
+        let drinkRecord = preset.toDrinkRecord(date: time)
         
-        viewModel.addDrink(drinkRecord)
+        viewModel.drinkDataManager.addDrink(drinkRecord)
+        viewModel.updateDisplayData()
+    }
+    
+    // プリセットから即座に飲み物を追加
+    private func addDrinkFromPreset(_ preset: DrinkPreset, time: Date) {
+        let drinkRecord = preset.toDrinkRecord(date: time)
+        viewModel.drinkDataManager.addDrink(drinkRecord)
+        viewModel.updateDisplayData()
+        
+        // ハプティックフィードバック
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+        
+        // トーストメッセージを表示
+        let dailyTotal = viewModel.drinkDataManager.getDailyTotalAlcohol()
+        let percentage = (dailyTotal / viewModel.recommendedDailyLimit) * 100
+        
+        if percentage < 50 {
+            toastMessage = "記録しました！今日: \(String(format: "%.1f", dailyTotal))g（推奨量の\(Int(percentage))%）"
+        } else if percentage < 75 {
+            toastMessage = "記録しました！今日: \(String(format: "%.1f", dailyTotal))g（適度な量です）"
+        } else if percentage < 100 {
+            toastMessage = "記録しました！今日: \(String(format: "%.1f", dailyTotal))g（上限に近づいています）"
+        } else {
+            toastMessage = "記録しました！今日: \(String(format: "%.1f", dailyTotal))g（推奨量を超えています）"
+        }
+        
+        withAnimation {
+            showToast = true
+        }
     }
 }
 
@@ -242,30 +275,46 @@ struct CustomAddButton: View {
 struct PresetQuickAddButton: View {
     let preset: DrinkPreset
     let action: () -> Void
+    let onLongPress: (() -> Void)?
+    
+    init(preset: DrinkPreset, action: @escaping () -> Void, onLongPress: (() -> Void)? = nil) {
+        self.preset = preset
+        self.action = action
+        self.onLongPress = onLongPress
+    }
     
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                // アイコン部分
-                ZStack {
-                    Circle()
-                        .fill(preset.drinkType.color.opacity(0.2))
-                        .frame(width: 60, height: 60)
-                    
-                    AppIcons.forDrinkType(preset.drinkType)
-                        .font(.system(size: 24))
-                        .foregroundColor(preset.drinkType.color)
-                }
+        VStack(spacing: 8) {
+            // アイコン部分
+            ZStack {
+                Circle()
+                    .fill(preset.drinkType.color.opacity(0.2))
+                    .frame(width: 60, height: 60)
                 
-                // 名前
-                Text(preset.name)
-                    .font(AppFonts.caption)
-                    .foregroundColor(AppColors.textPrimary)
-                    .lineLimit(1)
-                    .frame(width: 80)
+                AppIcons.forDrinkType(preset.drinkType)
+                    .font(.system(size: 24))
+                    .foregroundColor(preset.drinkType.color)
             }
-            .frame(width: 80, height: 100)
-            .padding(.vertical, 8)
+            
+            // 名前
+            Text(preset.name)
+                .font(AppFonts.caption)
+                .foregroundColor(AppColors.textPrimary)
+                .lineLimit(1)
+                .frame(width: 80)
+        }
+        .frame(width: 80, height: 100)
+        .padding(.vertical, 8)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            action()
+        }
+        .onLongPressGesture(minimumDuration: 0.5) {
+            if let onLongPress = onLongPress {
+                let generator = UIImpactFeedbackGenerator(style: .medium)
+                generator.impactOccurred()
+                onLongPress()
+            }
         }
     }
 }

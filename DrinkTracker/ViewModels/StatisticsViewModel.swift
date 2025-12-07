@@ -51,6 +51,31 @@ class StatisticsViewModel: ObservableObject {
         updateMonthlyData()
     }
     
+    // 週間グラフ用のデータを取得
+    func getWeeklyChartData() -> [DailyAlcoholData] {
+        let calendar = Calendar.current
+        var data: [DailyAlcoholData] = []
+        
+        // 今日から過去7日間のデータを取得
+        for offset in -6...0 {
+            guard let date = calendar.date(byAdding: .day, value: offset, to: Date()) else { continue }
+            
+            let dayRecords = drinkDataManager.getDrinkRecords(for: date)
+            let alcoholGrams = dayRecords.reduce(0) { $0 + $1.pureAlcoholGrams }
+            
+            // 曜日ラベルを取得
+            let weekdaySymbol = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: date) - 1]
+            
+            data.append(DailyAlcoholData(
+                date: date,
+                dayLabel: weekdaySymbol,
+                alcoholGrams: alcoholGrams
+            ))
+        }
+        
+        return data
+    }
+    
     // 月間データの更新（現在の月の日ごとのデータ）
     private func updateMonthlyData() {
         let calendar = Calendar.current

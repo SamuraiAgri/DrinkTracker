@@ -24,6 +24,7 @@ class DrinkRecordViewModel: ObservableObject {
     
     // ナビゲーション制御
     @Published var shouldDismiss: Bool = false
+    @Published var savedSuccessMessage: String = ""
     
     // よく使う飲み物のプリセット（場所で分類）
     @Published var favoritePresets: [DrinkRecord] = []
@@ -155,6 +156,10 @@ class DrinkRecordViewModel: ObservableObject {
         if isFavorite {
             loadFavoritePresets()
         }
+        
+        // 保存成功メッセージを生成
+        let dailyTotal = drinkDataManager.getDailyTotalAlcohol()
+        savedSuccessMessage = "記録しました！今日のアルコール摂取量: \(String(format: "%.1f", dailyTotal))g"
         
         // 画面を閉じる
         shouldDismiss = true

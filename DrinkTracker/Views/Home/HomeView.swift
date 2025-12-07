@@ -4,6 +4,9 @@ struct HomeView: View {
     @StateObject var viewModel: HomeViewModel
     @EnvironmentObject var drinkPresetManager: DrinkPresetManager
     @State private var showingAddDrinkSheet = false
+    @State private var isWeeklySummaryExpanded = true
+    @State private var isRecentDrinksExpanded = true
+    @State private var isHealthAdviceExpanded = true
     
     init(drinkDataManager: DrinkDataManager, userProfileManager: UserProfileManager) {
         _viewModel = StateObject(wrappedValue: HomeViewModel(
@@ -15,25 +18,41 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: AppConstants.UI.standardPadding) {
-                // ヘッダー
-                HeaderView()
-                
-                // 今日の飲酒サマリー
+                // 今日の飲酒サマリー（最優先）
                 DrinkSummaryView(viewModel: viewModel)
                 
-                // クイック追加ボタン - ここだけ更新
+                // クイック追加ボタン
                 QuickAddView(viewModel: viewModel, presetManager: drinkPresetManager)
                 
-                // 週間サマリー
-                WeeklySummaryView(viewModel: viewModel)
+                // 週間サマリー（折りたたみ可能）
+                CollapsibleSection(
+                    title: "週間サマリー",
+                    icon: "chart.bar.fill",
+                    isExpanded: $isWeeklySummaryExpanded
+                ) {
+                    WeeklySummaryContent(viewModel: viewModel)
+                }
                 
-                // 最近の飲み物リスト
-                RecentDrinksView(drinks: viewModel.recentDrinks, viewModel: viewModel)
+                // 最近の飲み物リスト（折りたたみ可能）
+                CollapsibleSection(
+                    title: "最近の記録",
+                    icon: "clock.fill",
+                    isExpanded: $isRecentDrinksExpanded
+                ) {
+                    RecentDrinksContent(drinks: viewModel.recentDrinks, viewModel: viewModel)
+                }
                 
-                // 健康アドバイス
-                HealthAdviceView(advice: viewModel.healthAdvice)
+                // 健康アドバイス（折りたたみ可能）
+                CollapsibleSection(
+                    title: "健康アドバイス",
+                    icon: "heart.fill",
+                    isExpanded: $isHealthAdviceExpanded
+                ) {
+                    HealthAdviceContent(advice: viewModel.healthAdvice)
+                }
             }
             .padding(.horizontal)
+            .padding(.bottom, 16)
         }
         .sheet(isPresented: $showingAddDrinkSheet) {
             DrinkRecordView(drinkDataManager: viewModel.drinkDataManager)
@@ -153,7 +172,7 @@ struct AlcoholProgressView: View {
     }
 }
 
-// 週間サマリービュー
+// 週間サマリービュー（後方互換性のため残す）
 struct WeeklySummaryView: View {
     @ObservedObject var viewModel: HomeViewModel
     
@@ -163,6 +182,21 @@ struct WeeklySummaryView: View {
                 .font(AppFonts.title3)
                 .padding(.bottom, 4)
             
+            WeeklySummaryContent(viewModel: viewModel)
+        }
+        .padding()
+        .background(AppColors.cardBackground)
+        .cornerRadius(AppConstants.UI.cornerRadius)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+}
+
+// 週間サマリーのコンテンツ部分
+struct WeeklySummaryContent: View {
+    @ObservedObject var viewModel: HomeViewModel
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppConstants.UI.smallPadding) {
             HStack(alignment: .top, spacing: AppConstants.UI.standardPadding) {
                 // 週間アルコール摂取量
                 VStack(alignment: .leading) {
@@ -216,9 +250,6 @@ struct WeeklySummaryView: View {
             }
         }
         .padding()
-        .background(AppColors.cardBackground)
-        .cornerRadius(AppConstants.UI.cornerRadius)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
     
     private func getRiskColor(_ risk: AlcoholCalculator.HealthRiskLevel) -> String {
@@ -238,14 +269,32 @@ struct WeeklySummaryView: View {
 struct RecentDrinksView: View {
     let drinks: [DrinkRecord]
     @ObservedObject var viewModel: HomeViewModel
-    @State private var showingEditSheet = false
-    @State private var drinkToEdit: DrinkRecord? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppConstants.UI.smallPadding) {
             Text("最近の記録")
                 .font(AppFonts.title3)
             
+            RecentDrinksContent(drinks: drinks, viewModel: viewModel)
+        }
+        .padding()
+        .background(AppColors.cardBackground)
+        .cornerRadius(AppConstants.UI.cornerRadius)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+}
+
+// 最近の記録のコンテンツ部分
+struct RecentDrinksContent: View {
+    let drinks: [DrinkRecord]
+    @ObservedObject var viewModel: HomeViewModel
+    @State private var showingEditSheet = false
+    @State private var drinkToEdit: DrinkRecord? = nil
+    @State private var showingDeleteAlert = false
+    @State private var drinkToDelete: DrinkRecord? = nil
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
             if drinks.isEmpty {
                 Text("最近の記録はありません")
                     .font(AppFonts.body)
@@ -259,9 +308,10 @@ struct RecentDrinksView: View {
                             .listRowInsets(EdgeInsets()) // 余分な余白を削除
                             .background(AppColors.cardBackground)
                             .listRowBackground(Color.clear) // 背景を透明に
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
-                                    viewModel.deleteDrink(drink.id)
+                                    drinkToDelete = drink
+                                    showingDeleteAlert = true
                                 } label: {
                                     Label("削除", systemImage: "trash")
                                 }
@@ -274,21 +324,47 @@ struct RecentDrinksView: View {
                                 }
                                 .tint(AppColors.primary)
                             }
+                            .contextMenu {
+                                Button {
+                                    drinkToEdit = drink
+                                    showingEditSheet = true
+                                } label: {
+                                    Label("編集", systemImage: "pencil")
+                                }
+                                
+                                Button(role: .destructive) {
+                                    drinkToDelete = drink
+                                    showingDeleteAlert = true
+                                } label: {
+                                    Label("削除", systemImage: "trash")
+                                }
+                            }
                     }
                 }
                 .listStyle(PlainListStyle()) // リストスタイルをプレーンに
                 .frame(height: min(CGFloat(drinks.prefix(5).count) * 80, 400)) // 高さを調整
             }
         }
-        .padding()
-        .background(AppColors.cardBackground)
-        .cornerRadius(AppConstants.UI.cornerRadius)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         .sheet(isPresented: $showingEditSheet, onDismiss: {
             drinkToEdit = nil
         }) {
             if let drink = drinkToEdit {
                 DrinkRecordView(drinkDataManager: viewModel.drinkDataManager, existingDrink: drink)
+            }
+        }
+        .alert("記録を削除", isPresented: $showingDeleteAlert) {
+            Button("キャンセル", role: .cancel) {
+                drinkToDelete = nil
+            }
+            Button("削除", role: .destructive) {
+                if let drink = drinkToDelete {
+                    viewModel.deleteDrink(drink.id)
+                    drinkToDelete = nil
+                }
+            }
+        } message: {
+            if let drink = drinkToDelete {
+                Text("\(drink.drinkType.rawValue)（\(String(format: "%.1f", drink.pureAlcoholGrams))g）の記録を削除しますか？")
             }
         }
     }
@@ -297,6 +373,7 @@ struct RecentDrinksView: View {
 // 飲み物リストアイテム
 struct DrinkListItemView: View {
     let drink: DrinkRecord
+    @State private var showHaptic = false
     
     var body: some View {
         HStack {
@@ -334,6 +411,11 @@ struct DrinkListItemView: View {
         }
         .padding(.vertical, 8)
         .background(AppColors.cardBackground)
+        .onLongPressGesture(minimumDuration: 0.1) {
+            // 長押し時のハプティックフィードバック
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+        }
     }
 }
 
@@ -351,14 +433,24 @@ struct HealthAdviceView: View {
                     .font(AppFonts.title3)
             }
             
-            Text(advice)
-                .font(AppFonts.body)
-                .foregroundColor(AppColors.textPrimary)
-                .multilineTextAlignment(.leading)
+            HealthAdviceContent(advice: advice)
         }
         .padding()
         .background(AppColors.cardBackground)
         .cornerRadius(AppConstants.UI.cornerRadius)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+}
+
+// 健康アドバイスのコンテンツ部分
+struct HealthAdviceContent: View {
+    let advice: String
+    
+    var body: some View {
+        Text(advice)
+            .font(AppFonts.body)
+            .foregroundColor(AppColors.textPrimary)
+            .multilineTextAlignment(.leading)
+            .padding()
     }
 }
