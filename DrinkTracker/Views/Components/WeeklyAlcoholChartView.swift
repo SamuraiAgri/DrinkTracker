@@ -33,7 +33,7 @@ struct WeeklyAlcoholChartView: View {
             HStack(spacing: 16) {
                 LegendItem(color: AppColors.success, label: "安全範囲")
                 LegendItem(color: AppColors.warning, label: "適度")
-                LegendItem(color: AppColors.danger, label: "超過")
+                LegendItem(color: AppColors.error, label: "超過")
             }
             .font(AppFonts.caption)
             .padding(.top, 8)
@@ -50,7 +50,7 @@ struct WeeklyAlcoholChartView: View {
         } else if amount <= AppConstants.Drinking.moderateRiskLimit {
             return AppColors.warning
         } else {
-            return AppColors.danger
+            return AppColors.error
         }
     }
 }
@@ -89,7 +89,7 @@ struct SimpleBarChartView: View {
         } else if amount <= AppConstants.Drinking.moderateRiskLimit {
             return AppColors.warning
         } else {
-            return AppColors.danger
+            return AppColors.error
         }
     }
 }
