@@ -179,11 +179,14 @@ class DrinkRecordViewModel: ObservableObject {
         let dailyTotal = drinkDataManager.getDailyTotalAlcohol()
         savedSuccessMessage = "記録しました！今日のアルコール摂取量: \(String(format: "%.1f", dailyTotal))g"
         
-        // インタースティシャル広告を表示（頻度制限付き）
-        InterstitialAdManager.shared.showAdIfAvailable()
-        
         // 画面を閉じる
         shouldDismiss = true
+        
+        // インタースティシャル広告を遅延表示（シートが閉じた後に表示）
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            print("🎬 ViewModel: Attempting to show interstitial ad...")
+            InterstitialAdManager.shared.showAdIfAvailable()
+        }
     }
     
     // 記録フォームのステップ
