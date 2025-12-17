@@ -183,8 +183,8 @@ class DrinkRecordViewModel: ObservableObject {
         shouldDismiss = true
         
         // インタースティシャル広告を遅延表示（シートが閉じた後に表示）
+        // 3回に1回の頻度で表示される
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            print("🎬 ViewModel: Attempting to show interstitial ad...")
             InterstitialAdManager.shared.showAdIfAvailable()
         }
     }

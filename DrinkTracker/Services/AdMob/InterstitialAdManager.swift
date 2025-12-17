@@ -18,7 +18,7 @@ class InterstitialAdManager: NSObject, ObservableObject {
     
     private var interstitialAd: GADInterstitialAd?
     private var adDisplayCount = 0
-    private let displayFrequency = 1 // テスト用: 毎回表示（本番では3に変更）
+    private let displayFrequency = 3 // 3回に1回表示
     
     private override init() {
         super.init()

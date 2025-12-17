@@ -16,7 +16,8 @@ class AdMobManager {
     static let appID = "ca-app-pub-8001546494492220~2824472839"
     
     // MARK: - 開発モード（テスト広告を使用）
-    static let isDevelopmentMode = true
+    // 本番リリース時は false に設定
+    static let isDevelopmentMode = false
     
     // MARK: - Ad Unit IDs
     struct AdUnitID {
