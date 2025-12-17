@@ -44,7 +44,6 @@ class DrinkDataManager: ObservableObject {
     
     // 飲み物を追加
     func addDrinkRecord(_ record: DrinkRecord) {
-        print("DrinkDataManager: レコード追加 - 日付: \(record.date), 種類: \(record.drinkType.rawValue)")
         drinkRecords.append(record)
     }
     

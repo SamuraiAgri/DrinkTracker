@@ -99,6 +99,22 @@ class HomeViewModel: ObservableObject {
         return healthRiskLevel.recommendation
     }
     
+    // 休肝日目標達成状況
+    var alcoholFreeDayGoal: Int {
+        return userProfileManager.userProfile.weeklyAlcoholFreeDayGoal
+    }
+    
+    // 休肝日目標達成率
+    var alcoholFreeDayProgress: Double {
+        guard alcoholFreeDayGoal > 0 else { return 0 }
+        return min(1.0, Double(alcoholFreeDaysCount) / Double(alcoholFreeDayGoal))
+    }
+    
+    // 休肝日目標達成したか
+    var isAlcoholFreeDayGoalAchieved: Bool {
+        return alcoholFreeDaysCount >= alcoholFreeDayGoal
+    }
+    
     // 飲酒量の削減による推定節約額（月間）
     func calculateProjectedMonthlySavings(reductionPercent: Double = 20) -> Double {
         let projection = SavingsCalculator.calculateProjectedSavings(

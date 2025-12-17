@@ -49,17 +49,26 @@ class DrinkRecordViewModel: ObservableObject {
             self.location = drink.location ?? ""
             self.note = drink.note ?? ""
             self.isFavorite = drink.isFavorite
-            print("DrinkRecordViewModel: 編集モード - 日付: \(drink.date)")
         } else {
             // デフォルト値をセット
             resetToDefaults()
-            // 初期日付が指定されている場合は設定（startOfDayで時刻をリセット）
+            // 初期日付が指定されている場合は設定
+            // 日付部分はinitialDateを使用し、時刻部分は現在時刻を設定
             if let initialDate = initialDate {
                 let calendar = Calendar.current
-                self.date = calendar.startOfDay(for: initialDate)
-                print("DrinkRecordViewModel: 新規作成 - initialDate指定: \(initialDate) -> \(self.date)")
-            } else {
-                print("DrinkRecordViewModel: 新規作成 - 今日の日付: \(self.date)")
+                let dateComponents = calendar.dateComponents([.year, .month, .day], from: initialDate)
+                let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: Date())
+                
+                var combinedComponents = dateComponents
+                combinedComponents.hour = timeComponents.hour
+                combinedComponents.minute = timeComponents.minute
+                combinedComponents.second = timeComponents.second
+                
+                if let combinedDate = calendar.date(from: combinedComponents) {
+                    self.date = combinedDate
+                } else {
+                    self.date = initialDate
+                }
             }
         }
         
@@ -85,18 +94,13 @@ class DrinkRecordViewModel: ObservableObject {
     
     // 次のステップに進む
     func nextStep() {
-        print("Current step: \(currentStep)")  // デバッグ出力
-        
         switch currentStep {
         case .drinkType:
             currentStep = .amount
-            print("Moving to amount step")  // デバッグ出力
         case .amount:
             currentStep = .details
-            print("Moving to details step")  // デバッグ出力
         case .details:
             saveRecord()
-            print("Saving record")  // デバッグ出力
         }
     }
     
@@ -119,9 +123,8 @@ class DrinkRecordViewModel: ObservableObject {
         volume = selectedDrinkType.defaultSize
         alcoholPercentage = selectedDrinkType.defaultPercentage
         price = ""
-        // 日付を日の開始時刻にする
-        let calendar = Calendar.current
-        date = calendar.startOfDay(for: Date())
+        // 現在の日時をそのまま使用（時刻情報も保持）
+        date = Date()
         location = ""
         note = ""
         isFavorite = false
@@ -143,16 +146,14 @@ class DrinkRecordViewModel: ObservableObject {
         // 価格を数値に変換
         let priceValue = Double(price.replacingOccurrences(of: ",", with: ""))
         
-        // 日付をそのまま使用（既にstartOfDayで正規化されている）
-        // ユーザーがDatePickerで選択した日付を尊重する
-        let normalizedDate = date
-        
-        print("DrinkRecordViewModel: 保存する日付: \(normalizedDate)")
+        // ユーザーがDatePickerで選択した日時をそのまま使用
+        // 時刻情報はBAC計算に必要なため保持する
+        let recordDate = date
         
         // 新しい記録を作成
         let record = DrinkRecord(
             id: existingDrinkId ?? UUID(),
-            date: normalizedDate,
+            date: recordDate,
             drinkType: selectedDrinkType,
             volume: volume,
             alcoholPercentage: alcoholPercentage,

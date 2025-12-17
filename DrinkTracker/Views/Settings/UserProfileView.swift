@@ -117,6 +117,23 @@ struct UserProfileView: View {
                         .foregroundColor(AppColors.textSecondary)
                         .padding(.vertical, 8)
                 }
+                
+                Section(header: Text("休肝日目標")) {
+                    Stepper(value: $viewModel.weeklyAlcoholFreeDayGoal, in: 0...7) {
+                        HStack {
+                            Text("週間休肝日目標")
+                            Spacer()
+                            Text("\(viewModel.weeklyAlcoholFreeDayGoal)日")
+                                .foregroundColor(AppColors.primary)
+                                .font(AppFonts.bodyBold)
+                        }
+                    }
+                    
+                    Text("週に\(viewModel.weeklyAlcoholFreeDayGoal)日以上の休肝日を設けることを目標にします。健康のために週2日以上の休肝日をおすすめします。")
+                        .font(AppFonts.caption)
+                        .foregroundColor(AppColors.textSecondary)
+                        .padding(.vertical, 8)
+                }
             }
             .navigationTitle("プロフィール設定")
             .navigationBarTitleDisplayMode(.inline)

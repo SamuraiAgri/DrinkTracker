@@ -239,13 +239,30 @@ struct WeeklySummaryContent: View {
                         .font(AppFonts.caption)
                         .foregroundColor(AppColors.textSecondary)
                     
-                    Text("\(viewModel.alcoholFreeDaysCount)")
-                        .font(AppFonts.stats)
-                        .foregroundColor(AppColors.textPrimary)
+                    HStack(alignment: .firstTextBaseline, spacing: 2) {
+                        Text("\(viewModel.alcoholFreeDaysCount)")
+                            .font(AppFonts.stats)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Text("/ \(viewModel.alcoholFreeDayGoal)")
+                            .font(AppFonts.body)
+                            .foregroundColor(AppColors.textSecondary)
+                    }
                     
-                    Text("今週")
-                        .font(AppFonts.caption)
-                        .foregroundColor(AppColors.textSecondary)
+                    // 目標達成表示
+                    if viewModel.isAlcoholFreeDayGoalAchieved {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 12))
+                            Text("達成！")
+                                .font(AppFonts.caption)
+                        }
+                        .foregroundColor(AppColors.success)
+                    } else {
+                        Text("目標まであと\(viewModel.alcoholFreeDayGoal - viewModel.alcoholFreeDaysCount)日")
+                            .font(AppFonts.caption)
+                            .foregroundColor(AppColors.textSecondary)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -297,10 +314,22 @@ struct RecentDrinksContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if drinks.isEmpty {
-                Text("最近の記録はありません")
-                    .font(AppFonts.body)
-                    .foregroundColor(AppColors.textSecondary)
-                    .padding()
+                // 空状態のデザイン改善
+                VStack(spacing: 16) {
+                    Image(systemName: "wineglass")
+                        .font(.system(size: 40))
+                        .foregroundColor(AppColors.textTertiary)
+                    
+                    Text("最近の記録はありません")
+                        .font(AppFonts.body)
+                        .foregroundColor(AppColors.textSecondary)
+                    
+                    Text("お酒を飲んだら記録してみましょう")
+                        .font(AppFonts.caption)
+                        .foregroundColor(AppColors.textTertiary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
             } else {
                 // List を使用してスワイプアクションを実装
                 List {

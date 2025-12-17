@@ -27,7 +27,6 @@ struct StatisticsView: View {
                 
                 // カレンダー表示
                 CalendarView(viewModel: viewModel, onAddDrink: { date in
-                    print("StatisticsView: onAddDrink呼び出し - 日付: \(date)")
                     dateForNewDrink = date
                     showingAddDrinkSheet = true
                 })
@@ -364,9 +363,24 @@ struct RecordsListView: View {
         NavigationView {
             List {
                 if records.isEmpty {
-                    Text("この期間の記録はありません")
-                        .foregroundColor(AppColors.textSecondary)
-                        .padding()
+                    // 空状態のデザイン改善
+                    VStack(spacing: 16) {
+                        Image(systemName: "chart.bar")
+                            .font(.system(size: 40))
+                            .foregroundColor(AppColors.textTertiary)
+                        
+                        Text("この期間の記録はありません")
+                            .font(AppFonts.body)
+                            .foregroundColor(AppColors.textSecondary)
+                        
+                        Text("飲酒記録を追加すると、ここに統計が表示されます")
+                            .font(AppFonts.caption)
+                            .foregroundColor(AppColors.textTertiary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+                    .listRowBackground(Color.clear)
                 } else {
                     // 期間表示セクション
                     Section(header: Text("表示期間: \(timeFrameText)")) {

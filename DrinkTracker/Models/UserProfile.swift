@@ -9,6 +9,7 @@ struct UserProfile: Codable, Equatable {
     var height: Double? // cm
     var drinkingGoal: DrinkingGoal
     var weeklyBudget: Double? // 円
+    var weeklyAlcoholFreeDayGoal: Int // 週間休肝日目標（デフォルト2日）
     var notificationsEnabled: Bool
     var preferredRemindTime: Date
     var createdAt: Date
@@ -23,6 +24,7 @@ struct UserProfile: Codable, Equatable {
         height: Double? = nil,
         drinkingGoal: DrinkingGoal = .moderate,
         weeklyBudget: Double? = 5000,
+        weeklyAlcoholFreeDayGoal: Int = 2,
         notificationsEnabled: Bool = true,
         preferredRemindTime: Date = UserProfile.defaultReminderTime(),
         createdAt: Date = Date(),
@@ -36,6 +38,7 @@ struct UserProfile: Codable, Equatable {
         self.height = height
         self.drinkingGoal = drinkingGoal
         self.weeklyBudget = weeklyBudget
+        self.weeklyAlcoholFreeDayGoal = weeklyAlcoholFreeDayGoal
         self.notificationsEnabled = notificationsEnabled
         self.preferredRemindTime = preferredRemindTime
         self.createdAt = createdAt
@@ -88,6 +91,7 @@ struct UserProfile: Codable, Equatable {
         self.height = newProfile.height
         self.drinkingGoal = newProfile.drinkingGoal
         self.weeklyBudget = newProfile.weeklyBudget
+        self.weeklyAlcoholFreeDayGoal = newProfile.weeklyAlcoholFreeDayGoal
         self.notificationsEnabled = newProfile.notificationsEnabled
         self.preferredRemindTime = newProfile.preferredRemindTime
         self.lastUpdated = Date()

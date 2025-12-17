@@ -10,6 +10,7 @@ class SettingsViewModel: ObservableObject {
     @Published var height: Double? = nil
     @Published var drinkingGoal: UserProfile.DrinkingGoal = .moderate
     @Published var weeklyBudget: String = ""
+    @Published var weeklyAlcoholFreeDayGoal: Int = 2
     @Published var notificationsEnabled: Bool = true
     @Published var preferredReminderTime: Date = Date()
     
@@ -51,6 +52,7 @@ class SettingsViewModel: ObservableObject {
         self.height = profile.height
         self.drinkingGoal = profile.drinkingGoal
         self.weeklyBudget = profile.weeklyBudget != nil ? String(format: "%.0f", profile.weeklyBudget!) : ""
+        self.weeklyAlcoholFreeDayGoal = profile.weeklyAlcoholFreeDayGoal
         self.notificationsEnabled = profile.notificationsEnabled
         self.preferredReminderTime = profile.preferredRemindTime
     }
@@ -65,6 +67,7 @@ class SettingsViewModel: ObservableObject {
         updatedProfile.height = height
         updatedProfile.drinkingGoal = drinkingGoal
         updatedProfile.weeklyBudget = Double(weeklyBudget.replacingOccurrences(of: ",", with: ""))
+        updatedProfile.weeklyAlcoholFreeDayGoal = weeklyAlcoholFreeDayGoal
         updatedProfile.notificationsEnabled = notificationsEnabled
         updatedProfile.preferredRemindTime = preferredReminderTime
         updatedProfile.lastUpdated = Date()

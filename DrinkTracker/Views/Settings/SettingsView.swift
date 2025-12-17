@@ -60,6 +60,19 @@ struct SettingsView: View {
                         )
                     }
                     .buttonStyle(PlainButtonStyle())
+                    
+                    // 休肝日目標
+                    Button {
+                        showingProfileEditor = true
+                    } label: {
+                        SettingsItemView(
+                            icon: "moon.fill",
+                            title: "週間休肝日目標",
+                            subtitle: "\(viewModel.weeklyAlcoholFreeDayGoal)日",
+                            iconColor: AppColors.success
+                        )
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
                 
                 // About section
