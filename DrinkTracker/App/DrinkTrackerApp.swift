@@ -8,6 +8,11 @@ struct DrinkTrackerApp: App {
     @StateObject public var userProfileManager = UserProfileManager()
     @StateObject public var drinkPresetManager = DrinkPresetManager()
     
+    init() {
+        // AdMobを初期化
+        AdMobManager.shared.initialize()
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()

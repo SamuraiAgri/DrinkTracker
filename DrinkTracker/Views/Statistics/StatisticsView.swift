@@ -17,45 +17,50 @@ struct StatisticsView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: AppConstants.UI.standardPadding) {
-                // 週間グラフ
-                WeeklyAlcoholChartView(data: viewModel.getWeeklyChartData())
-                
-                // 月間ペース分析
-                MonthlyAnalysisView(viewModel: viewModel)
-                
-                // カレンダー表示
-                CalendarView(viewModel: viewModel, onAddDrink: { date in
-                    dateForNewDrink = date
-                    showingAddDrinkSheet = true
-                })
-                
-                // 飲酒タイプ内訳
-                if let stats = viewModel.getStatistics(), !stats.drinkTypeBreakdown.isEmpty {
-                    DrinkTypeBreakdownView(breakdown: stats.drinkTypeBreakdown)
-                }
-                
-                // 記録一覧を表示するボタン
-                Button(action: {
-                    showingRecordsList = true
-                }) {
-                    HStack {
-                        Image(systemName: "list.bullet")
-                        Text("記録を編集・削除")
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: AppConstants.UI.standardPadding) {
+                    // 週間グラフ
+                    WeeklyAlcoholChartView(data: viewModel.getWeeklyChartData())
+                    
+                    // 月間ペース分析
+                    MonthlyAnalysisView(viewModel: viewModel)
+                    
+                    // カレンダー表示
+                    CalendarView(viewModel: viewModel, onAddDrink: { date in
+                        dateForNewDrink = date
+                        showingAddDrinkSheet = true
+                    })
+                    
+                    // 飲酒タイプ内訳
+                    if let stats = viewModel.getStatistics(), !stats.drinkTypeBreakdown.isEmpty {
+                        DrinkTypeBreakdownView(breakdown: stats.drinkTypeBreakdown)
                     }
-                    .font(AppFonts.body)
-                    .foregroundColor(AppColors.primary)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        RoundedRectangle(cornerRadius: AppConstants.UI.cornerRadius)
-                            .stroke(AppColors.primary, lineWidth: 1)
-                    )
+                    
+                    // 記録一覧を表示するボタン
+                    Button(action: {
+                        showingRecordsList = true
+                    }) {
+                        HStack {
+                            Image(systemName: "list.bullet")
+                            Text("記録を編集・削除")
+                        }
+                        .font(AppFonts.body)
+                        .foregroundColor(AppColors.primary)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: AppConstants.UI.cornerRadius)
+                                .stroke(AppColors.primary, lineWidth: 1)
+                        )
+                    }
+                    .padding(.horizontal)
                 }
                 .padding(.horizontal)
             }
-            .padding(.horizontal)
+            
+            // バナー広告
+            AdBannerView()
         }
         .navigationTitle("記録")
         .onAppear {

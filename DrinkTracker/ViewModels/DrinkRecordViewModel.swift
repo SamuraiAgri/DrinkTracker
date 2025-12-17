@@ -179,6 +179,9 @@ class DrinkRecordViewModel: ObservableObject {
         let dailyTotal = drinkDataManager.getDailyTotalAlcohol()
         savedSuccessMessage = "記録しました！今日のアルコール摂取量: \(String(format: "%.1f", dailyTotal))g"
         
+        // インタースティシャル広告を表示（頻度制限付き）
+        InterstitialAdManager.shared.showAdIfAvailable()
+        
         // 画面を閉じる
         shouldDismiss = true
     }

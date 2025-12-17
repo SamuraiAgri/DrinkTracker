@@ -17,43 +17,48 @@ struct HomeView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: AppConstants.UI.standardPadding) {
-                // 今日の飲酒サマリー（最優先）
-                DrinkSummaryView(viewModel: viewModel)
-                
-                // クイック追加ボタン
-                QuickAddView(viewModel: viewModel, presetManager: drinkPresetManager)
-                
-                // 週間サマリー（折りたたみ可能）
-                CollapsibleSection(
-                    title: "週間サマリー",
-                    icon: "chart.bar.fill",
-                    isExpanded: $isWeeklySummaryExpanded
-                ) {
-                    WeeklySummaryContent(viewModel: viewModel)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: AppConstants.UI.standardPadding) {
+                    // 今日の飲酒サマリー（最優先）
+                    DrinkSummaryView(viewModel: viewModel)
+                    
+                    // クイック追加ボタン
+                    QuickAddView(viewModel: viewModel, presetManager: drinkPresetManager)
+                    
+                    // 週間サマリー（折りたたみ可能）
+                    CollapsibleSection(
+                        title: "週間サマリー",
+                        icon: "chart.bar.fill",
+                        isExpanded: $isWeeklySummaryExpanded
+                    ) {
+                        WeeklySummaryContent(viewModel: viewModel)
+                    }
+                    
+                    // 最近の飲み物リスト（折りたたみ可能）
+                    CollapsibleSection(
+                        title: "最近の記録",
+                        icon: "clock.fill",
+                        isExpanded: $isRecentDrinksExpanded
+                    ) {
+                        RecentDrinksContent(drinks: viewModel.recentDrinks, viewModel: viewModel)
+                    }
+                    
+                    // 健康アドバイス（折りたたみ可能）
+                    CollapsibleSection(
+                        title: "健康アドバイス",
+                        icon: "heart.fill",
+                        isExpanded: $isHealthAdviceExpanded
+                    ) {
+                        HealthAdviceContent(advice: viewModel.healthAdvice)
+                    }
                 }
-                
-                // 最近の飲み物リスト（折りたたみ可能）
-                CollapsibleSection(
-                    title: "最近の記録",
-                    icon: "clock.fill",
-                    isExpanded: $isRecentDrinksExpanded
-                ) {
-                    RecentDrinksContent(drinks: viewModel.recentDrinks, viewModel: viewModel)
-                }
-                
-                // 健康アドバイス（折りたたみ可能）
-                CollapsibleSection(
-                    title: "健康アドバイス",
-                    icon: "heart.fill",
-                    isExpanded: $isHealthAdviceExpanded
-                ) {
-                    HealthAdviceContent(advice: viewModel.healthAdvice)
-                }
+                .padding(.horizontal)
+                .padding(.bottom, 16)
             }
-            .padding(.horizontal)
-            .padding(.bottom, 16)
+            
+            // バナー広告
+            AdBannerView()
         }
         .sheet(isPresented: $showingAddDrinkSheet) {
             DrinkRecordView(drinkDataManager: viewModel.drinkDataManager)

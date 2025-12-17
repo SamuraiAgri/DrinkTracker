@@ -6,13 +6,30 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		215AD4152EF2761C00B2DA93 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 215AD4142EF2761C00B2DA93 /* GoogleMobileAds */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		216C857F2D7B22AB003B5D1E /* DrinkTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrinkTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		215AD4172EF2766000B2DA93 /* Exceptions for "DrinkTracker" folder in "DrinkTracker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 216C857E2D7B22AB003B5D1E /* DrinkTracker */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		216C85812D7B22AB003B5D1E /* DrinkTracker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				215AD4172EF2766000B2DA93 /* Exceptions for "DrinkTracker" folder in "DrinkTracker" target */,
+			);
 			path = DrinkTracker;
 			sourceTree = "<group>";
 		};
@@ -23,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				215AD4152EF2761C00B2DA93 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +83,7 @@
 			);
 			name = DrinkTracker;
 			packageProductDependencies = (
+				215AD4142EF2761C00B2DA93 /* GoogleMobileAds */,
 			);
 			productName = DrinkTracker;
 			productReference = 216C857F2D7B22AB003B5D1E /* DrinkTracker.app */;
@@ -94,6 +113,9 @@
 			);
 			mainGroup = 216C85762D7B22AB003B5D1E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				215AD4132EF2761C00B2DA93 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 216C85802D7B22AB003B5D1E /* Products */;
 			projectDirPath = "";
@@ -255,6 +277,7 @@
 				DEVELOPMENT_TEAM = 76D94XSD47;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DrinkTracker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "お酒ノート";
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -291,6 +314,7 @@
 				DEVELOPMENT_TEAM = 76D94XSD47;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DrinkTracker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "お酒ノート";
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -338,6 +362,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		215AD4132EF2761C00B2DA93 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		215AD4142EF2761C00B2DA93 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 215AD4132EF2761C00B2DA93 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 216C85772D7B22AB003B5D1E /* Project object */;
 }
