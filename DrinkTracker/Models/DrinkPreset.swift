@@ -38,8 +38,12 @@ struct DrinkPreset: Identifiable, Codable, Equatable {
     
     // DrinkRecordに変換するヘルパーメソッド
     func toDrinkRecord(date: Date = Date()) -> DrinkRecord {
+        // 日付を日の開始時刻にする（時刻情報をリセット）
+        let calendar = Calendar.current
+        let normalizedDate = calendar.startOfDay(for: date)
+        
         return DrinkRecord(
-            date: date,
+            date: normalizedDate,
             drinkType: drinkType,
             volume: volume,
             alcoholPercentage: alcoholPercentage,

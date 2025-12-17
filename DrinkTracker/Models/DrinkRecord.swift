@@ -117,9 +117,14 @@ extension Array where Element == DrinkRecord {
             return []
         }
         
+        // 翌日を取得（endDateの次の日）
+        guard let nextDay = calendar.date(byAdding: .day, value: 1, to: endDate) else {
+            return []
+        }
+        
         return self.filter {
             let recordDate = calendar.startOfDay(for: $0.date)
-            return (recordDate >= startDate && recordDate <= endDate)
+            return recordDate >= startDate && recordDate < nextDay
         }
     }
     
@@ -127,14 +132,21 @@ extension Array where Element == DrinkRecord {
     func recordsForMonth(containing date: Date) -> [DrinkRecord] {
         let calendar = Calendar.current
         let components = calendar.dateComponents([.year, .month], from: date)
-        guard let startOfMonth = calendar.date(from: components),
-              let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth) else {
+        guard let startOfMonth = calendar.date(from: components) else {
             return []
         }
         
+        // 翌月の初日を取得
+        guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth) else {
+            return []
+        }
+        
+        // 月の最初の日から翌月の初日の前日までの記録をフィルタリング
         return self.filter {
             let recordDate = calendar.startOfDay(for: $0.date)
-            return (recordDate >= startOfMonth && recordDate <= endOfMonth)
+            let recordStartOfMonth = calendar.startOfDay(for: startOfMonth)
+            let recordNextMonth = calendar.startOfDay(for: nextMonth)
+            return recordDate >= recordStartOfMonth && recordDate < recordNextMonth
         }
     }
 }

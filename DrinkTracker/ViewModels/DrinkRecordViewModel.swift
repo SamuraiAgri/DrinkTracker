@@ -52,9 +52,10 @@ class DrinkRecordViewModel: ObservableObject {
         } else {
             // デフォルト値をセット
             resetToDefaults()
-            // 初期日付が指定されている場合は設定
+            // 初期日付が指定されている場合は設定（startOfDayで時刻をリセット）
             if let initialDate = initialDate {
-                self.date = initialDate
+                let calendar = Calendar.current
+                self.date = calendar.startOfDay(for: initialDate)
             }
         }
         
@@ -114,7 +115,9 @@ class DrinkRecordViewModel: ObservableObject {
         volume = selectedDrinkType.defaultSize
         alcoholPercentage = selectedDrinkType.defaultPercentage
         price = ""
-        date = Date()
+        // 日付を日の開始時刻にする
+        let calendar = Calendar.current
+        date = calendar.startOfDay(for: Date())
         location = ""
         note = ""
         isFavorite = false
@@ -136,10 +139,14 @@ class DrinkRecordViewModel: ObservableObject {
         // 価格を数値に変換
         let priceValue = Double(price.replacingOccurrences(of: ",", with: ""))
         
+        // 日付を日の開始時刻にする（時刻情報をリセット）
+        let calendar = Calendar.current
+        let normalizedDate = calendar.startOfDay(for: date)
+        
         // 新しい記録を作成
         let record = DrinkRecord(
             id: existingDrinkId ?? UUID(),
-            date: date,
+            date: normalizedDate,
             drinkType: selectedDrinkType,
             volume: volume,
             alcoholPercentage: alcoholPercentage,

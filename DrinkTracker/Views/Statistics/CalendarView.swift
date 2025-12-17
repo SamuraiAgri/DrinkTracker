@@ -81,7 +81,11 @@ struct CalendarView: View {
         .onAppear {
             selectedDate = viewModel.selectedDate
         }
-        .sheet(isPresented: $showingDayEditor) {
+        .sheet(isPresented: $showingDayEditor, onDismiss: {
+            // Sheet閉じた後にデータを更新
+            viewModel.changeDate(selectedDate)
+            viewModel.updateData()
+        }) {
             DayRecordsEditView(
                 date: selectedDate,
                 records: viewModel.drinkDataManager.getDrinkRecords(for: selectedDate),

@@ -73,6 +73,8 @@ struct StatisticsView: View {
         }
         .sheet(isPresented: $showingAddDrinkSheet, onDismiss: {
             // Sheetが閉じた後にデータを更新
+            // 日付も再設定して確実に更新
+            viewModel.changeDate(dateForNewDrink)
             viewModel.updateData()
         }) {
             // 選択した日付のドリンク追加画面
