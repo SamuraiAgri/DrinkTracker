@@ -12,14 +12,20 @@ import GoogleMobileAds
 struct AdBannerView: View {
     @State private var bannerHeight: CGFloat = 0
     
+    init() {
+        print("🎯 AdBannerView: Initialized")
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
-            if bannerHeight > 0 {
-                BannerViewRepresentable(bannerHeight: $bannerHeight)
-                    .frame(height: bannerHeight)
-            }
+            // 常にBannerViewを表示し、高さが0の場合は見えないだけにする
+            BannerViewRepresentable(bannerHeight: $bannerHeight)
+                .frame(height: max(50, bannerHeight)) // 最小50ポイントを確保
+                .background(Color.gray.opacity(0.1)) // デバッグ用の背景色
         }
-        .background(Color(.systemBackground))
+        .onAppear {
+            print("🎯 AdBannerView: Appeared in view hierarchy")
+        }
     }
 }
 

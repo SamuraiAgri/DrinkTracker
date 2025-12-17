@@ -41,15 +41,33 @@ class AdMobManager {
     
     /// AdMobを初期化
     func initialize() {
+        print("🔧 AdMobManager: Starting initialization...")
+        print("📱 Test mode: \(AdMobManager.isDevelopmentMode)")
+        print("🎯 Banner ID: \(AdUnitID.banner)")
+        print("🎯 Interstitial ID: \(AdUnitID.interstitial)")
+        
         // テストデバイスとしてシミュレータを追加
         let testDeviceIdentifiers = [GADSimulatorID]
         GADMobileAds.sharedInstance().requestConfiguration.testDeviceIdentifiers = testDeviceIdentifiers
+        print("🔧 Test device IDs set: \(testDeviceIdentifiers)")
         
         GADMobileAds.sharedInstance().start { status in
-            print("✅ AdMob initialized successfully")
-            print("📱 Test mode: \(AdMobManager.isDevelopmentMode)")
+            print("✅ AdMob SDK initialization completed")
+            print("� Initialization status:")
             for (adapter, adapterStatus) in status.adapterStatusesByClassName {
-                print("  - \(adapter): \(adapterStatus.state.rawValue)")
+                let stateString: String
+                switch adapterStatus.state {
+                case .notReady:
+                    stateString = "Not Ready"
+                case .ready:
+                    stateString = "Ready ✅"
+                @unknown default:
+                    stateString = "Unknown"
+                }
+                print("  - \(adapter): \(stateString)")
+                if adapterStatus.state == .notReady, let description = adapterStatus.description as String? {
+                    print("    Description: \(description)")
+                }
             }
         }
     }
