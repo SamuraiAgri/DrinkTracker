@@ -4,6 +4,7 @@ struct CalendarView: View {
     @ObservedObject var viewModel: StatisticsViewModel
     @State private var selectedDate: Date = Date()
     @State private var showingDayEditor: Bool = false
+    @State private var pendingAddDrinkDate: Date? = nil
     var onAddDrink: (Date) -> Void
     
     // スワイプ検出用
@@ -85,12 +86,25 @@ struct CalendarView: View {
             // Sheet閉じた後にデータを更新
             viewModel.changeDate(selectedDate)
             viewModel.updateData()
+            
+            // 新規追加フラグがセットされている場合は、少し遅延してシートを開く
+            if pendingAddDrinkDate != nil {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    if let date = pendingAddDrinkDate {
+                        onAddDrink(date)
+                        pendingAddDrinkDate = nil
+                    }
+                }
+            }
         }) {
             DayRecordsEditView(
                 date: selectedDate,
                 records: viewModel.drinkDataManager.getDrinkRecords(for: selectedDate),
                 drinkDataManager: viewModel.drinkDataManager,
-                onAddDrink: onAddDrink
+                onAddDrink: { date in
+                    // 一旦保存して、シートが閉じた後に処理する
+                    pendingAddDrinkDate = date
+                }
             )
         }
     }
@@ -417,7 +431,9 @@ struct DayRecordsEditView: View {
                 
                 // 新規追加ボタン
                 Button(action: {
-                    // onAddDrinkを使用して日付を渡す
+                    // onAddDrinkを使用して日付を渡し、シートを閉じる
+                    // onAddDrinkはCalendarViewのpendingAddDrinkDateをセットするだけ
+                    // シートが閉じた後にStatisticsViewで新しいシートが開く
                     onAddDrink(date)
                     presentationMode.wrappedValue.dismiss()
                 }) {

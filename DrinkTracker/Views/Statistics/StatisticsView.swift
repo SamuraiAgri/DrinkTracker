@@ -27,6 +27,7 @@ struct StatisticsView: View {
                 
                 // カレンダー表示
                 CalendarView(viewModel: viewModel, onAddDrink: { date in
+                    print("StatisticsView: onAddDrink呼び出し - 日付: \(date)")
                     dateForNewDrink = date
                     showingAddDrinkSheet = true
                 })
@@ -78,10 +79,12 @@ struct StatisticsView: View {
             viewModel.updateData()
         }) {
             // 選択した日付のドリンク追加画面
+            // id修飾子で毎回新しいViewを作成
             DrinkRecordView(
                 drinkDataManager: viewModel.drinkDataManager,
                 initialDate: dateForNewDrink
             )
+            .id(dateForNewDrink) // 日付が変わるたびに新しいViewを作成
         }
     }
 }
