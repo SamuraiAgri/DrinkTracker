@@ -78,10 +78,8 @@ struct BannerViewRepresentable: UIViewRepresentable {
         func bannerView(_ bannerView: GADBannerView, didFailToReceiveAdWithError error: Error) {
             print("❌ AdBanner: Failed to load banner ad")
             print("❌ Error: \(error.localizedDescription)")
-            if let gadError = error as? GADError {
-                print("❌ GAD Error Code: \(gadError.code)")
-                print("❌ GAD Error Domain: \(gadError.domain)")
-            }
+            print("❌ Error Code: \((error as NSError).code)")
+            print("❌ Error Domain: \((error as NSError).domain)")
             DispatchQueue.main.async {
                 self.bannerHeight = 0
             }

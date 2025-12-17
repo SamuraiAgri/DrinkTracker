@@ -39,9 +39,8 @@ class InterstitialAdManager: NSObject, ObservableObject {
             if let error = error {
                 print("❌ Interstitial: Failed to load ad")
                 print("❌ Error: \(error.localizedDescription)")
-                if let gadError = error as? GADError {
-                    print("❌ GAD Error Code: \(gadError.code)")
-                }
+                print("❌ Error Code: \((error as NSError).code)")
+                print("❌ Error Domain: \((error as NSError).domain)")
                 self?.isAdReady = false
                 return
             }
