@@ -31,7 +31,7 @@ class DrinkRecordViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
-    init(drinkDataManager: DrinkDataManager, existingDrink: DrinkRecord? = nil) {
+    init(drinkDataManager: DrinkDataManager, existingDrink: DrinkRecord? = nil, initialDate: Date? = nil) {
         // 最初にプロパティを初期化
         self.drinkDataManager = drinkDataManager
         
@@ -52,6 +52,10 @@ class DrinkRecordViewModel: ObservableObject {
         } else {
             // デフォルト値をセット
             resetToDefaults()
+            // 初期日付が指定されている場合は設定
+            if let initialDate = initialDate {
+                self.date = initialDate
+            }
         }
         
         // お気に入りのプリセットを読み込み

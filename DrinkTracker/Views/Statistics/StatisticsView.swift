@@ -71,15 +71,14 @@ struct StatisticsView: View {
         .sheet(item: $drinkToEdit) { drink in
             DrinkRecordView(drinkDataManager: viewModel.drinkDataManager, existingDrink: drink)
         }
-        .sheet(isPresented: $showingAddDrinkSheet) {
+        .sheet(isPresented: $showingAddDrinkSheet, onDismiss: {
+            // Sheetが閉じた後にデータを更新
+            viewModel.updateData()
+        }) {
             // 選択した日付のドリンク追加画面
             DrinkRecordView(
                 drinkDataManager: viewModel.drinkDataManager,
-                existingDrink: DrinkRecord(
-                    date: dateForNewDrink,
-                    drinkType: .beer,
-                    volume: 350.0
-                )
+                initialDate: dateForNewDrink
             )
         }
     }

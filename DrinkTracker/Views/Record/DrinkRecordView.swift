@@ -5,10 +5,11 @@ struct DrinkRecordView: View {
     @StateObject var viewModel: DrinkRecordViewModel
     @Environment(\.presentationMode) var presentationMode
     
-    init(drinkDataManager: DrinkDataManager, existingDrink: DrinkRecord? = nil) {
+    init(drinkDataManager: DrinkDataManager, existingDrink: DrinkRecord? = nil, initialDate: Date? = nil) {
         _viewModel = StateObject(wrappedValue: DrinkRecordViewModel(
             drinkDataManager: drinkDataManager,
-            existingDrink: existingDrink
+            existingDrink: existingDrink,
+            initialDate: initialDate
         ))
     }
     
